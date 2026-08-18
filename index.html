@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sabrini's Royal Treats · Walmart Canada · Internal Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- ============================================================
+     SABRINI'S ROYAL TREATS - DASHBOARD INTERNO
+     Marca hermana de naturelits-dashboard: misma tipografia
+     (Fraunces + IBM Plex), misma arquitectura de tabs y cards.
+     Acento propio: tierra #A85C32 en vez del verde esmeralda.
+
+     JERARQUIA: Negocio-first, NO PPC-first. El motor de la cuenta
+     es precio + organico; PPC es secundario y por eso va 5to, no
+     1ro. Las cifras que sostienen esa lectura viven en el Sheet,
+     no aca: este archivo no hardcodea ningun dato del negocio.
+
+     >>> REGLA DE DATOS (Sheet PUBLICO e indexable via CSV) <<<
+     NO deben existir en el Sheet ni en este HTML:
+       - montos de deuda de billing
+       - COGS
+       - margenes
+     Billing se muestra SOLO como estado ("pending"), sin cifra.
+     El resto (RoAS, CTR, ACoS, competidores) se asume visible.
+     scrubMoney() abajo es una red de seguridad por si una cifra
+     se cuela al cargar el Sheet: la tapa en render. No reemplaza
+     la disciplina de no escribirla.
+
+     >>> VARIANTE CLIENTE (pendiente) <<<
+     Este archivo es INTERNO. Una version cliente requeriria:
+       - ocultar RoAS / CTR / ACoS / spend crudo
+       - ocultar nombres de competidores (campo Note de
+         PPC_Campaigns, Detail de Blockers, Body de Verdict)
+       - ocultar el tab PPC completo o reducirlo a "en optimizacion"
+       - ocultar Blockers con Owner interno
+     Buscar los marcadores CLIENT-HIDE en el codigo.
+     ============================================================ -->
+
+<style>
+:root{
+  /* Paleta Sabrini's - tierra + crema, hermana de Naturelits.
+     Status trio (verde/ambar/rojo) validado con el validador de
+     paleta: CVD, chroma, normal-vision y contraste PASS sobre
+     superficie clara. Los status SIEMPRE llevan label de texto,
+     nunca color solo. La serie del grafico es unica (tierra), no
+     compite en identidad con los status. */
+  --marca:#A85C32; --marca-2:#C27A4E; --marca-pal:#F5EBE3; --marca-bd:#E0C4AE;
+  --negro:#1F1A16; --tinta:#2C2620; --blanco:#F4F1EA; --papel:#FBFAF6;
+  --verde:#16704A; --verde-bg:#E2F0E9;
+  --rojo:#B3352B;  --rojo-bg:#FBEAE8;
+  --ambar:#B07D00; --ambar-bg:#FBF3DA;
+  --gris:#857c72;  --linea:#e6e0d6;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'IBM Plex Sans',sans-serif; color:var(--tinta);
+  background:var(--blanco);
+  background-image:radial-gradient(circle at 12% 8%, #a85c3214 0, transparent 40%),
+                   radial-gradient(circle at 88% 4%, #16704a0f 0, transparent 35%);
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.num{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px; margin:0 auto; padding:0 24px}
+
+/* -- Header -- */
+header{padding:44px 0 26px; border-bottom:3px solid var(--negro)}
+.brandrow{display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap}
+.kicker{font-size:.72rem; font-weight:600; letter-spacing:.22em; text-transform:uppercase; color:var(--marca); margin-bottom:6px}
+h1{font-family:'Fraunces',serif; font-weight:900; font-size:clamp(2rem,5vw,3.3rem); line-height:.98; color:var(--negro); letter-spacing:-.02em}
+h1 span{color:var(--marca)}
+.sub{font-size:.95rem; color:var(--gris); margin-top:8px}
+.hmeta{display:flex; flex-direction:column; align-items:flex-end; gap:8px}
+.status{display:inline-flex; align-items:center; gap:7px; font-size:.74rem; font-weight:600; padding:6px 12px; border-radius:99px; border:1px solid var(--linea); background:var(--papel)}
+.dot{width:8px; height:8px; border-radius:50%; background:var(--gris); flex:none}
+.dot.live{background:var(--verde); box-shadow:0 0 0 3px #16704a22}
+.dot.local{background:var(--ambar)}
+.dot.err{background:var(--rojo); box-shadow:0 0 0 3px #b3352b22}
+.gen{font-size:.72rem; color:var(--gris); font-family:'IBM Plex Mono',monospace}
+
+/* -- Tabs -- */
+.tabs{display:flex; gap:2px; flex-wrap:wrap; margin:24px 0; border-bottom:1px solid var(--linea); position:sticky; top:0; background:var(--blanco); z-index:20; padding-top:6px}
+.tab{appearance:none; border:0; background:transparent; font-family:inherit; font-size:.92rem; font-weight:600; color:var(--gris); padding:11px 16px; cursor:pointer; border-bottom:2px solid transparent; transition:color .2s, border-color .2s; white-space:nowrap; display:flex; align-items:center; gap:7px}
+.tab:hover{color:var(--negro)}
+.tab.active{color:var(--marca); border-bottom-color:var(--marca)}
+.tab .tn{font-family:'IBM Plex Mono',monospace; font-size:.68rem; color:var(--marca-bd)}
+.tab.active .tn{color:var(--marca-2)}
+.panel{display:none; padding:10px 0 46px}
+.panel.active{display:block; animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+
+/* -- Section heads -- */
+.shead{display:flex; align-items:baseline; gap:14px; margin:6px 0 20px}
+h2{font-family:'Fraunces',serif; font-weight:600; font-size:1.5rem; color:var(--negro); letter-spacing:-.01em}
+h3.sub3{font-family:'Fraunces',serif; font-weight:600; font-size:1.1rem; color:var(--negro); margin:34px 0 14px}
+.snote{font-size:.82rem; color:var(--gris); margin-left:auto; max-width:360px; text-align:right}
+
+/* -- KPI cards (borde izquierdo de color) -- */
+.kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-bottom:8px}
+.kpi{background:var(--papel); border:1px solid var(--linea); border-radius:14px; padding:18px; position:relative; overflow:hidden}
+.kpi::before{content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--marca)}
+.kpi.good::before{background:var(--verde)} .kpi.warn::before{background:var(--ambar)} .kpi.bad::before{background:var(--rojo)}
+.kpi .lbl{font-size:.68rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--gris)}
+.kpi .val{font-family:'IBM Plex Mono',monospace; font-size:1.8rem; font-weight:600; color:var(--negro); margin:6px 0 2px; letter-spacing:-.02em}
+.kpi .foot{font-size:.76rem; color:var(--gris)}
+
+/* -- Verdict cards -- */
+.vcards{display:flex; flex-direction:column; gap:16px}
+.vcard{background:var(--papel); border:1px solid var(--linea); border-left:4px solid var(--marca); border-radius:12px; padding:20px 24px}
+.vcard.good{border-left-color:var(--verde)} .vcard.warn{border-left-color:var(--ambar)} .vcard.bad{border-left-color:var(--rojo)}
+.vcard .vs{font-size:.68rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--gris); margin-bottom:7px}
+.vcard.good .vs{color:var(--verde)} .vcard.warn .vs{color:var(--ambar)} .vcard.bad .vs{color:var(--rojo)}
+.vcard h4{font-family:'Fraunces',serif; font-weight:600; font-size:1.28rem; color:var(--negro); margin-bottom:9px; line-height:1.25}
+.vcard p{font-size:.93rem; line-height:1.65; color:var(--tinta); max-width:80ch}
+
+/* -- Tablas -- */
+.tscroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+.tbl{width:100%; border-collapse:collapse; font-size:.87rem; min-width:660px}
+.tbl th{text-align:right; font-size:.67rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--gris); padding:0 12px 10px; border-bottom:2px solid var(--negro); white-space:nowrap}
+.tbl th:first-child, .tbl th.l{text-align:left}
+.tbl td{padding:12px; border-bottom:1px solid var(--linea); text-align:right; font-family:'IBM Plex Mono',monospace; white-space:nowrap}
+.tbl td:first-child, .tbl td.l{text-align:left; font-family:'IBM Plex Sans',sans-serif; white-space:normal}
+.tbl tr:hover td{background:var(--marca-pal)}
+.tbl .cn{font-weight:600; color:var(--negro)}
+.tbl tr.star td{background:#f8efe6}
+.tbl tr.star:hover td{background:var(--marca-pal)}
+.tbl tr.star td:first-child{box-shadow:inset 3px 0 0 var(--marca)}
+.sig{display:inline-block; font-size:.63rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:2px 7px; border-radius:5px; margin-left:7px; background:var(--marca); color:#fff; vertical-align:middle}
+.pill{display:inline-block; font-size:.7rem; font-weight:600; padding:3px 9px; border-radius:99px; white-space:nowrap}
+.p-on{color:var(--verde); background:var(--verde-bg)}
+.p-off{color:var(--gris); background:#ececec}
+.p-warn{color:var(--ambar); background:var(--ambar-bg)}
+.p-bad{color:var(--rojo); background:var(--rojo-bg)}
+.roas-low{color:var(--rojo); font-weight:700}
+.roas-hi{color:var(--verde); font-weight:700}
+.flag{display:inline-block; font-size:.64rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--ambar); background:var(--ambar-bg); padding:2px 7px; border-radius:5px; margin-left:6px}
+.note{font-size:.78rem; color:var(--gris); font-family:'IBM Plex Sans',sans-serif; white-space:normal; line-height:1.45}
+
+/* -- Callout -- */
+.callout{border-left:4px solid var(--ambar); background:var(--ambar-bg); border-radius:0 10px 10px 0; padding:14px 18px; font-size:.87rem; margin:18px 0; line-height:1.6}
+.callout.bad{border-left-color:var(--rojo); background:var(--rojo-bg)}
+.callout.info{border-left-color:var(--marca); background:var(--marca-pal)}
+.callout b{color:var(--negro)}
+
+/* -- Chart -- */
+.chartbox{background:var(--papel); border:1px solid var(--linea); border-radius:14px; padding:22px 20px 14px; position:relative}
+.charthead{display:flex; justify-content:space-between; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:4px}
+.charttitle{font-size:.86rem; font-weight:600; color:var(--negro)}
+.chartsub{font-size:.76rem; color:var(--gris)}
+.toggle{appearance:none; border:1px solid var(--linea); background:var(--blanco); font-family:inherit; font-size:.72rem; font-weight:600; color:var(--gris); padding:5px 11px; border-radius:7px; cursor:pointer}
+.toggle:hover{color:var(--negro); border-color:var(--marca-bd)}
+svg.chart{display:block; width:100%; height:auto; overflow:visible}
+.axis-l{font-family:'IBM Plex Mono',monospace; font-size:10px; fill:var(--gris)}
+.grid{stroke:var(--linea); stroke-width:1}
+.baseline{stroke:var(--negro); stroke-width:1.5}
+.evline{stroke:var(--rojo); stroke-width:1.5; stroke-dasharray:4 3}
+.evlabel{font-family:'IBM Plex Sans',sans-serif; font-size:11px; font-weight:700; fill:var(--rojo)}
+.bar{fill:var(--marca); transition:fill .12s}
+.bar.pre{fill:var(--marca-bd)}
+.bar.hov{fill:var(--marca-2)}
+.hit{fill:transparent; cursor:pointer}
+.tip{position:absolute; pointer-events:none; background:var(--negro); color:#f6f1ec; border-radius:8px; padding:9px 12px; font-size:.76rem; line-height:1.5; opacity:0; transition:opacity .12s; z-index:30; max-width:240px}
+.tip b{color:#fff; font-family:'IBM Plex Mono',monospace}
+.tip .te{color:#f0c9a8; display:block; margin-top:4px; font-size:.72rem}
+
+/* -- Kanban -- */
+.kbar{display:flex; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap}
+.kbar label{font-size:.72rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--gris)}
+select{font-family:inherit; font-size:.84rem; padding:7px 11px; border:1px solid var(--linea); border-radius:8px; background:var(--papel); color:var(--tinta); cursor:pointer}
+.kanban{display:grid; grid-template-columns:repeat(4,1fr); gap:14px}
+.col{background:var(--papel); border:1px solid var(--linea); border-radius:14px; padding:15px}
+.col h3{font-size:.75rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin-bottom:13px; display:flex; align-items:center; gap:8px; padding-bottom:9px; border-bottom:1px solid var(--linea)}
+.cnt{font-family:'IBM Plex Mono',monospace; font-size:.7rem; color:#fff; background:var(--negro); border-radius:99px; padding:1px 8px; margin-left:auto}
+.col.done h3{color:var(--verde)} .col.done .cnt{background:var(--verde)}
+.col.todo h3{color:var(--marca)} .col.todo .cnt{background:var(--marca)}
+.col.block h3{color:var(--rojo)} .col.block .cnt{background:var(--rojo)}
+.col.wait h3{color:var(--ambar)} .col.wait .cnt{background:var(--ambar)}
+.card{border-left:3px solid var(--linea); padding:8px 0 8px 12px; margin-bottom:13px}
+.col.done .card{border-color:var(--verde)} .col.todo .card{border-color:var(--marca)}
+.col.block .card{border-color:var(--rojo)} .col.wait .card{border-color:var(--ambar)}
+.card .ca{font-weight:600; font-size:.85rem; color:var(--negro); line-height:1.35}
+.card .cd{font-size:.77rem; color:var(--gris); margin-top:3px; line-height:1.45}
+.card .cf{display:inline-block; margin-top:6px; font-family:'IBM Plex Mono',monospace; font-size:.66rem; color:var(--gris)}
+.empty{font-size:.78rem; color:var(--gris); font-style:italic; padding:6px 0}
+
+/* -- Estado de carga -- */
+.loading{padding:44px 0; text-align:center; color:var(--gris); font-size:.88rem}
+.setup{border:1px dashed var(--marca-bd); background:var(--marca-pal); border-radius:12px; padding:22px 24px; font-size:.86rem; line-height:1.65}
+.setup h4{font-family:'Fraunces',serif; font-size:1.05rem; color:var(--negro); margin-bottom:9px}
+.setup code{font-family:'IBM Plex Mono',monospace; font-size:.8rem; background:#fff; padding:2px 6px; border-radius:5px; border:1px solid var(--marca-bd)}
+.setup ol{margin:10px 0 0 20px} .setup li{margin-bottom:5px}
+
+footer{padding:30px 0 56px; border-top:1px solid var(--linea); color:var(--gris); font-size:.78rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px}
+footer b{color:var(--tinta)}
+
+@media(max-width:900px){ .kanban{grid-template-columns:repeat(2,1fr)} }
+@media(max-width:760px){
+  header{padding:30px 0 20px}
+  .hmeta{align-items:flex-start}
+  .kanban{grid-template-columns:1fr}
+  .snote{display:none}
+  .tabs{gap:0}
+  .tab{padding:10px 12px; font-size:.85rem}
+  .tab .tn{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brandrow">
+      <div>
+        <div class="kicker">LTH Marketplace Agency · Internal</div>
+        <h1>Sabrini's <span>Royal Treats</span></h1>
+        <div class="sub">Walmart Canada · Internal Dashboard</div>
+      </div>
+      <div class="hmeta">
+        <span class="status"><span class="dot" id="dot"></span><span id="dataState">Conectando…</span></span>
+        <span class="gen" id="genDate"></span>
+        <span class="gen">Fuente: Walmart Reports + Orders Export</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-p="verdict"><span class="tn">01</span>Verdict</button>
+    <button class="tab" data-p="sku"><span class="tn">02</span>SKU Sales</button>
+    <button class="tab" data-p="price"><span class="tn">03</span>Price &amp; Organic</button>
+    <button class="tab" data-p="reviews"><span class="tn">04</span>Reviews &amp; Blockers</button>
+    <button class="tab" data-p="ppc"><span class="tn">05</span>PPC</button>
+    <button class="tab" data-p="actions"><span class="tn">06</span>Actions</button>
+  </nav>
+
+  <!-- 01 VERDICT -->
+  <section class="panel active" data-p="verdict">
+    <div class="shead"><h2>Veredicto de la semana</h2>
+      <div class="snote">Lectura editorial. El motor del negocio es precio + orgánico; PPC es marginal.</div></div>
+    <div id="verdictBox" class="loading">Cargando veredicto…</div>
+  </section>
+
+  <!-- 02 SKU SALES -->
+  <section class="panel" data-p="sku">
+    <div class="shead"><h2>Ventas por SKU</h2>
+      <div class="snote">Ordenado por unidades 90d. La fila destacada es el SKU marcado <b>Star</b>.</div></div>
+    <div id="skuKpis" class="kpis"></div>
+    <div id="skuBox" class="loading">Cargando SKUs…</div>
+  </section>
+
+  <!-- 03 PRICE & ORGANIC -->
+  <section class="panel" data-p="price">
+    <div class="shead"><h2>Precio y cadencia orgánica</h2>
+      <div class="snote">Unidades por día. La línea punteada marca el drop de precio.</div></div>
+    <div id="priceKpis" class="kpis"></div>
+    <div id="priceBox" class="loading">Cargando cadencia…</div>
+  </section>
+
+  <!-- 04 REVIEWS & BLOCKERS -->
+  <section class="panel" data-p="reviews">
+    <div class="shead"><h2>Reviews y bloqueos</h2>
+      <div class="snote">Reviews es la palanca real: mueve conversión sin costo por click.</div></div>
+    <div id="reviewsBox" class="loading">Cargando reviews…</div>
+    <h3 class="sub3">Blockers abiertos</h3>
+    <div id="blockersBox" class="loading">Cargando blockers…</div>
+  </section>
+
+  <!-- 05 PPC - secundario y honesto. CLIENT-HIDE: este tab entero -->
+  <section class="panel" data-p="ppc">
+    <div class="shead"><h2>PPC</h2>
+      <div class="snote">Secundario por diseño. Los números de abajo salen del Sheet.</div></div>
+    <div class="callout info">
+      <b>Contexto.</b> PPC no es el motor de esta cuenta. Se mantiene vivo por señal
+      (qué queries existen, qué categoría responde), no por retorno. La lectura correcta
+      de esta tabla es <b>direccional</b>, no de rentabilidad.
+    </div>
+    <div id="ppcKpis" class="kpis"></div>
+    <div id="ppcBox" class="loading">Cargando campañas…</div>
+  </section>
+
+  <!-- 06 ACTIONS -->
+  <section class="panel" data-p="actions">
+    <div class="shead"><h2>Acciones</h2>
+      <div class="snote">Kanban por estado, filtrable por semana.</div></div>
+    <div class="kbar">
+      <label for="weekSel">Semana</label>
+      <select id="weekSel"><option value="__all">Todas</option></select>
+      <span class="gen" id="weekCount"></span>
+    </div>
+    <div id="actionsBox" class="loading">Cargando acciones…</div>
+  </section>
+
+  <footer>
+    <span>Sabrini's Royal Treats · Walmart Canada · <b>Dashboard interno LTH</b></span>
+    <span>Datos en vivo desde Google Sheet · recargá para actualizar</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>
+/* ============================================================
+   FUENTE DE DATOS
+
+   Modo A (recomendado, igual que naturelits-dashboard):
+     pega el ID del Google Sheet en SHEET_ID. Una sola constante.
+     El Sheet debe estar como "cualquiera con el link puede ver".
+     Las pestanas deben llamarse exactamente:
+       Verdict · SKU_Sales · Price_Cadence · Blockers ·
+       PPC_Campaigns · Actions
+
+   Modo B (fallback): si SHEET_ID queda vacio, se usan las URLs
+     de "Publicar en la web -> CSV" de cada pestana, abajo.
+   ============================================================ */
+
+const SHEET_ID = ""; // ej: "1AbC...xyz"  <- pega el ID aca para modo live
+
+// Fallback: solo se usan si SHEET_ID esta vacio.
+const CSV_URLS = {
+  Verdict:       "PASTE_CSV_URL_HERE",
+  SKU_Sales:     "PASTE_CSV_URL_HERE",
+  Price_Cadence: "PASTE_CSV_URL_HERE",
+  Blockers:      "PASTE_CSV_URL_HERE",
+  PPC_Campaigns: "PASTE_CSV_URL_HERE",
+  Actions:       "PASTE_CSV_URL_HERE"
+};
+
+const TABS = ["Verdict","SKU_Sales","Price_Cadence","Blockers","PPC_Campaigns","Actions"];
+
+const gvizURL = sheet =>
+  "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
+  "/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent(sheet);
+
+function sheetURL(name){
+  if(SHEET_ID) return gvizURL(name);
+  const u = CSV_URLS[name];
+  return (u && u !== "PASTE_CSV_URL_HERE") ? u : null;
+}
+
+/* -- CSV parser: maneja comillas, comas internas y saltos de linea -- */
+function parseCSV(txt){
+  const rows=[]; let row=[], cell="", q=false;
+  for(let i=0;i<txt.length;i++){
+    const c=txt[i];
+    if(q){
+      if(c === '"'){ if(txt[i+1] === '"'){ cell+='"'; i++ } else q=false }
+      else cell+=c;
+    } else {
+      if(c === '"') q=true;
+      else if(c === ','){ row.push(cell); cell="" }
+      else if(c === '\n'){ row.push(cell); rows.push(row); row=[]; cell="" }
+      else if(c !== '\r') cell+=c;
+    }
+  }
+  if(cell.length || row.length){ row.push(cell); rows.push(row) }
+  if(!rows.length) return [];
+  const head = rows.shift().map(h => String(h).trim());
+  return rows
+    .filter(r => r.some(c => String(c).trim() !== ""))
+    .map(r => { const o={}; head.forEach((h,i)=>{ o[h] = String(r[i] == null ? "" : r[i]).trim() }); return o });
+}
+
+async function fetchSheet(name){
+  const url = sheetURL(name);
+  if(!url) throw new Error("sin URL para " + name);
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(name + " HTTP " + r.status);
+  return parseCSV(await r.text());
+}
+
+/* -- Helpers -- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num = v => { const n = parseFloat(String(v == null ? "" : v).replace(/[^0-9.\-]/g,"")); return isNaN(n) ? 0 : n };
+const has = v => String(v == null ? "" : v).trim() !== "";
+const money = v => has(v) ? ("$" + num(v).toFixed(2)) : "—";
+const int = v => has(v) ? Math.round(num(v)).toLocaleString("en-CA") : "—";
+
+/* >>> RED DE SEGURIDAD - REGLA DE DATOS <<<
+   El Sheet es publico. Si una cifra de deuda de billing, COGS o
+   margen se cuela en una celda, esta funcion la tapa en render.
+   Es una red, NO un permiso: esas cifras no deben escribirse.
+   Billing se muestra como ESTADO ("pending"), nunca como monto. */
+const SENSITIVE = /(billing|cogs|margin|margen|deuda|debt|payable|invoice|factura)/i;
+function scrubMoney(text, context){
+  if(!has(text)) return "";
+  const hay = String(context == null ? "" : context) + " " + String(text);
+  if(!SENSITIVE.test(hay)) return String(text);
+  return String(text).replace(/(US)?\$\s?[\d.,]+/gi, "[oculto]");
+}
+
+const norm = s => String(s == null ? "" : s).toLowerCase().trim()
+  .normalize("NFD").replace(/[̀-ͯ]/g,"");
+
+function toneClass(t){
+  const n = norm(t);
+  if(/good|bien|ok|positiv/.test(n)) return "good";
+  if(/bad|mal|critic|rojo|serious/.test(n)) return "bad";
+  if(/warn|alerta|riesgo|ambar|amber/.test(n)) return "warn";
+  return "";
+}
+
+/* Matching tolerante de Status del kanban: el Sheet lo carga una
+   persona, asi que aceptamos variantes en ES y EN. */
+function statusBucket(s){
+  const n = norm(s);
+  if(/hecho|done|complet|listo|cerrad/.test(n)) return "done";
+  if(/bloque|block/.test(n)) return "block";
+  if(/espera|wait|client/.test(n)) return "wait";
+  return "todo";
+}
+
+/* -- Tabs -- */
+document.querySelectorAll(".tab").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    document.querySelector('.panel[data-p="' + b.dataset.p + '"]').classList.add("active");
+  };
+});
+
+/* -- Tooltip -- */
+const tip = $("#tip");
+function showTip(html, x, y){
+  tip.innerHTML = html; tip.style.opacity = 1;
+  const r = tip.getBoundingClientRect();
+  let left = x - r.width/2;
+  left = Math.max(8, Math.min(left, window.innerWidth - r.width - 8));
+  tip.style.left = left + "px";
+  tip.style.top = (y + window.scrollY - r.height - 12) + "px";
+}
+const hideTip = () => { tip.style.opacity = 0 };
+
+/* ============================================================
+   RENDER 01 - VERDICT
+   ============================================================ */
+function renderVerdict(rows){
+  const box = $("#verdictBox");
+  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">Sin veredicto cargado en la pestaña Verdict.</div>'; return }
+  box.className = "vcards";
+  box.innerHTML = rows.map(r => {
+    const tc = toneClass(r.Tone);
+    return '<article class="vcard ' + tc + '">' +
+      (has(r.Section)  ? '<div class="vs">' + esc(r.Section) + '</div>' : "") +
+      (has(r.Headline) ? '<h4>' + esc(r.Headline) + '</h4>' : "") +
+      (has(r.Body)     ? '<p>' + esc(scrubMoney(r.Body, String(r.Section) + " " + String(r.Headline))) + '</p>' : "") +
+      '</article>';
+  }).join("");
+}
+
+/* ============================================================
+   RENDER 02 - SKU SALES
+   ============================================================ */
+function renderSKU(rows){
+  const box = $("#skuBox");
+  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">Sin datos en SKU_Sales.</div>'; return }
+  const sorted = rows.slice().sort((a,b) => num(b.Units_90d) - num(a.Units_90d));
+
+  const totalUnits = sorted.reduce((s,r) => s + num(r.Units_90d), 0);
+  const star = sorted.filter(r => /star/i.test(r.Signal || ""))[0];
+  const live = sorted.filter(r => /active|live|vivo/i.test(r.Status || "")).length;
+  const totalRev = sorted.reduce((s,r) => s + num(r.Reviews), 0);
+
+  $("#skuKpis").innerHTML =
+    '<div class="kpi"><div class="lbl">Unidades 90d</div><div class="val">' + int(totalUnits) + '</div><div class="foot">catálogo completo</div></div>' +
+    '<div class="kpi ' + (star ? 'good' : '') + '"><div class="lbl">SKU estrella</div><div class="val" style="font-size:1.25rem">' + (star ? esc(star.SKU) : "—") + '</div><div class="foot">' + (star ? esc(star.Pct_Catalog || "") + " del catálogo" : "sin Signal=Star") + '</div></div>' +
+    '<div class="kpi"><div class="lbl">SKUs activos</div><div class="val">' + live + '<span style="font-size:.9rem;color:var(--gris)">/' + sorted.length + '</span></div><div class="foot">listings vivos</div></div>' +
+    '<div class="kpi ' + (totalRev < 10 ? 'bad' : '') + '"><div class="lbl">Reviews totales</div><div class="val">' + int(totalRev) + '</div><div class="foot">' + (totalRev < 10 ? "el muro de conversión" : "acumuladas") + '</div></div>';
+
+  box.className = "tscroll";
+  box.innerHTML = '<table class="tbl"><thead><tr>' +
+    '<th class="l">SKU</th><th class="l">Producto</th><th class="l">Sp.</th><th class="l">Item ID</th>' +
+    '<th class="l">Estado</th><th>Un. 90d</th><th>Boom</th><th>Pre-boom</th>' +
+    '<th>% cat.</th><th>Precio</th><th>Rev.</th></tr></thead><tbody>' +
+    sorted.map(r => {
+      const isStar = /star/i.test(r.Signal || "");
+      const on = /active|live|vivo/i.test(r.Status || "");
+      return '<tr class="' + (isStar ? 'star' : '') + '">' +
+        '<td class="l cn">' + esc(r.SKU) + (isStar ? '<span class="sig">Star</span>' : '') + '</td>' +
+        '<td class="l">' + esc(r.Name) + '</td>' +
+        '<td class="l">' + esc(r.Species) + '</td>' +
+        '<td class="l num" style="font-size:.8rem;color:var(--gris)">' + esc(r.ItemID) + '</td>' +
+        '<td class="l"><span class="pill ' + (on ? 'p-on' : 'p-off') + '">' + esc(r.Status || "—") + '</span></td>' +
+        '<td><b>' + int(r.Units_90d) + '</b></td>' +
+        '<td>' + int(r.Units_Boom) + '</td>' +
+        '<td>' + int(r.Units_PreBoom) + '</td>' +
+        '<td>' + (has(r.Pct_Catalog) ? esc(r.Pct_Catalog) : "—") + '</td>' +
+        '<td>' + money(r.Price) + '</td>' +
+        '<td>' + int(r.Reviews) + '</td></tr>';
+    }).join("") + '</tbody></table>';
+}
+
+/* ============================================================
+   RENDER 03 - PRICE & ORGANIC
+
+   Forma elegida: BARRAS, no linea. Las unidades diarias son
+   conteos discretos con dias en cero; una linea los interpolaria
+   y mentiria sobre la cadencia real. Una sola serie => sin caja
+   de leyenda: el titulo nombra la serie. Barras pre-drop en tono
+   apagado = emphasis (contexto), no categorico. Gap de 2px entre
+   barras, data-end redondeado 4px, hover tooltip y vista tabla
+   alternativa para accesibilidad.
+   ============================================================ */
+function renderPrice(rows){
+  const box = $("#priceBox");
+  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">Sin datos en Price_Cadence.</div>'; return }
+
+  const data = rows.filter(r => has(r.Date))
+    .sort((a,b) => String(a.Date).localeCompare(String(b.Date)));
+  if(!data.length){ box.className=""; box.innerHTML = '<div class="empty">Price_Cadence sin fechas válidas.</div>'; return }
+
+  // Deteccion del cambio de precio, 100% data-driven: no hay ningun
+  // precio hardcodeado aca. Criterio 1: la primera fila donde Price_Era
+  // cambia respecto de la anterior. Criterio 2 (fallback): la primera
+  // fila cuyo Event menciona un "drop"/"baja" de precio.
+  let dropIdx = -1;
+  for(let i=1;i<data.length;i++){
+    const prev = String(data[i-1].Price_Era || "").trim();
+    const cur  = String(data[i].Price_Era || "").trim();
+    if(prev && cur && prev !== cur){ dropIdx = i; break }
+  }
+  if(dropIdx === -1){
+    for(let i=0;i<data.length;i++){
+      if(/drop|baja|price change|cambio de precio/i.test(data[i].Event || "")){ dropIdx = i; break }
+    }
+  }
+  // El precio nuevo sale del Sheet, nunca del codigo.
+  const newEra = dropIdx >= 0 ? String(data[dropIdx].Price_Era || "").trim() : "";
+  const oldEra = dropIdx > 0  ? String(data[dropIdx-1].Price_Era || "").trim() : "";
+  const dropLabel = newEra ? ("drop a " + newEra) : "cambio de precio";
+
+  const totalU = data.reduce((s,r) => s + num(r.Units_Day), 0);
+  const days   = data.length;
+  const active = data.filter(r => num(r.Units_Day) > 0).length;
+
+  let preAvg = null, postAvg = null, lift = null;
+  if(dropIdx > 0){
+    const pre = data.slice(0, dropIdx), post = data.slice(dropIdx);
+    preAvg  = pre.reduce((s,r) => s + num(r.Units_Day), 0) / Math.max(pre.length, 1);
+    postAvg = post.reduce((s,r) => s + num(r.Units_Day), 0) / Math.max(post.length, 1);
+    if(preAvg > 0) lift = (postAvg / preAvg - 1) * 100;
+  }
+
+  $("#priceKpis").innerHTML =
+    '<div class="kpi"><div class="lbl">Unidades en ventana</div><div class="val">' + int(totalU) + '</div><div class="foot">' + days + ' días</div></div>' +
+    '<div class="kpi"><div class="lbl">Días con venta</div><div class="val">' + active + '<span style="font-size:.9rem;color:var(--gris)">/' + days + '</span></div><div class="foot">cadencia orgánica</div></div>' +
+    (preAvg !== null ?
+      '<div class="kpi"><div class="lbl">Prom. día pre-drop</div><div class="val">' + preAvg.toFixed(1) + '</div><div class="foot">' + (oldEra ? "era " + esc(oldEra) : "antes del cambio") + '</div></div>' +
+      '<div class="kpi ' + (lift !== null && lift > 0 ? 'good' : 'warn') + '"><div class="lbl">Prom. día post-drop</div><div class="val">' + postAvg.toFixed(1) + '</div><div class="foot">' + (lift !== null ? (lift >= 0 ? "+" : "") + lift.toFixed(0) + "% vs pre" : "—") + '</div></div>'
+      : "");
+
+  // -- Geometria del SVG --
+  const W=1100, H=330, mL=44, mR=16, mT=30, mB=54;
+  const iw = W-mL-mR, ih = H-mT-mB;
+  const maxU = Math.max.apply(null, data.map(r => num(r.Units_Day)).concat([1]));
+  const step = iw / data.length;
+  const bw = Math.max(2, step - 2); // gap de 2px entre barras
+  const xAt = i => mL + i*step + (step-bw)/2;
+  const yAt = v => mT + ih - (v/maxU)*ih;
+  const rad = Math.min(4, bw/2);    // data-end redondeado 4px
+
+  const ticks = 4;
+  let grid = "", axis = "";
+  for(let t=0; t<=ticks; t++){
+    const v = maxU * t / ticks, yy = yAt(v);
+    grid += '<line class="grid" x1="' + mL + '" y1="' + yy.toFixed(1) + '" x2="' + (W-mR) + '" y2="' + yy.toFixed(1) + '"/>';
+    axis += '<text class="axis-l" x="' + (mL-8) + '" y="' + (yy+3.5).toFixed(1) + '" text-anchor="end">' + Math.round(v) + '</text>';
+  }
+
+  // Etiquetas de fecha: solo las que entran, nunca una por barra
+  const every = Math.max(1, Math.ceil(data.length / 9));
+  let xlabels = "";
+  data.forEach((r,i) => {
+    if(i % every !== 0 && i !== data.length-1) return;
+    const d = String(r.Date).length > 5 ? String(r.Date).slice(5) : String(r.Date);
+    xlabels += '<text class="axis-l" x="' + (xAt(i)+bw/2).toFixed(1) + '" y="' + (mT+ih+16) + '" text-anchor="middle">' + esc(d) + '</text>';
+  });
+
+  let bars = "", hits = "";
+  data.forEach((r,i) => {
+    const v = num(r.Units_Day);
+    const hgt = v > 0 ? Math.max(2, (v/maxU)*ih) : 0;
+    const yy = mT + ih - hgt;
+    const pre = (dropIdx > 0 && i < dropIdx) ? " pre" : "";
+    if(v > 0){
+      bars += '<rect class="bar' + pre + '" id="b' + i + '" x="' + xAt(i).toFixed(1) + '" y="' + yy.toFixed(1) +
+              '" width="' + bw.toFixed(1) + '" height="' + hgt.toFixed(1) + '" rx="' + rad.toFixed(1) + '"/>';
+    }
+    const ev  = has(r.Event) ? '<span class="te">' + esc(scrubMoney(r.Event, "event")) + '</span>' : "";
+    const era = has(r.Price_Era) ? ' · ' + esc(r.Price_Era) : "";
+    const tipHTML = esc(r.Date) + era + '<br><b>' + v + '</b> unidades' + ev;
+    hits += '<rect class="hit" x="' + (mL + i*step).toFixed(1) + '" y="' + mT + '" width="' + step.toFixed(1) +
+            '" height="' + ih + '" data-i="' + i + '" data-t="' + tipHTML.replace(/"/g,'&quot;') + '"/>';
+  });
+
+  // Marca del cambio de precio (label tomado del Sheet)
+  let evmark = "";
+  if(dropIdx >= 0){
+    const ex = mL + dropIdx*step;
+    const anchor = dropIdx > data.length*0.75 ? "end" : "start";
+    const lx = anchor === "end" ? ex - 5 : ex + 5;
+    evmark = '<line class="evline" x1="' + ex.toFixed(1) + '" y1="' + (mT-8) + '" x2="' + ex.toFixed(1) + '" y2="' + (mT+ih) + '"/>' +
+             '<text class="evlabel" x="' + lx.toFixed(1) + '" y="' + (mT-12) + '" text-anchor="' + anchor + '">' + esc(dropLabel) + '</text>';
+  }
+
+  box.className = "";
+  box.innerHTML =
+    '<div class="chartbox">' +
+      '<div class="charthead"><div>' +
+        '<div class="charttitle">Unidades vendidas por día</div>' +
+        '<div class="chartsub">' + (dropIdx > 0 ? "Barras claras = era de precio anterior · barras plenas = post-drop" : "Serie única · unidades diarias") + '</div>' +
+      '</div><button class="toggle" id="tblToggle">Ver como tabla</button></div>' +
+      '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Unidades vendidas por día. Máximo ' + maxU + ' unidades en un día.' + (dropIdx >= 0 ? ' El ' + esc(dropLabel) + ' ocurre el ' + esc(data[dropIdx].Date) + '.' : '') + '">' +
+        grid + bars + evmark +
+        '<line class="baseline" x1="' + mL + '" y1="' + (mT+ih) + '" x2="' + (W-mR) + '" y2="' + (mT+ih) + '"/>' +
+        axis + xlabels + hits +
+      '</svg>' +
+    '</div>' +
+    '<div id="priceTbl" style="display:none" class="tscroll">' +
+      '<table class="tbl"><thead><tr><th class="l">Fecha</th><th>Unidades</th><th class="l">Era de precio</th><th class="l">Evento</th></tr></thead><tbody>' +
+      data.map(r => '<tr><td class="l num">' + esc(r.Date) + '</td><td><b>' + int(r.Units_Day) + '</b></td>' +
+        '<td class="l">' + (esc(r.Price_Era) || "—") + '</td>' +
+        '<td class="l note">' + (esc(scrubMoney(r.Event, "event")) || "—") + '</td></tr>').join("") +
+      '</tbody></table></div>';
+
+  // Hover
+  box.querySelectorAll(".hit").forEach(h => {
+    h.addEventListener("mousemove", e => {
+      box.querySelectorAll(".bar").forEach(b => b.classList.remove("hov"));
+      const b = box.querySelector("#b" + h.dataset.i);
+      if(b) b.classList.add("hov");
+      showTip(h.dataset.t, e.clientX, e.clientY);
+    });
+    h.addEventListener("mouseleave", () => {
+      box.querySelectorAll(".bar").forEach(b => b.classList.remove("hov"));
+      hideTip();
+    });
+  });
+
+  const tg = $("#tblToggle"), pt = $("#priceTbl");
+  tg.onclick = () => {
+    const show = pt.style.display === "none";
+    pt.style.display = show ? "block" : "none";
+    tg.textContent = show ? "Ocultar tabla" : "Ver como tabla";
+  };
+}
+
+/* ============================================================
+   RENDER 04 - REVIEWS & BLOCKERS
+   ============================================================ */
+function renderReviews(skuRows){
+  const box = $("#reviewsBox");
+  if(!skuRows || !skuRows.length){ box.className=""; box.innerHTML = '<div class="empty">Sin datos de reviews (vienen de SKU_Sales).</div>'; return }
+  const list = skuRows.slice().sort((a,b) => num(b.Reviews) - num(a.Reviews));
+  const total = list.reduce((s,r) => s + num(r.Reviews), 0);
+  const zero = list.filter(r => num(r.Reviews) === 0).length;
+
+  box.className = "";
+  box.innerHTML =
+    '<div class="kpis" style="margin-bottom:18px">' +
+      '<div class="kpi ' + (total < 10 ? 'bad' : 'good') + '"><div class="lbl">Reviews totales</div><div class="val">' + int(total) + '</div><div class="foot">todo el catálogo</div></div>' +
+      '<div class="kpi ' + (zero ? 'warn' : '') + '"><div class="lbl">SKUs sin reviews</div><div class="val">' + zero + '<span style="font-size:.9rem;color:var(--gris)">/' + list.length + '</span></div><div class="foot">social proof en cero</div></div>' +
+    '</div>' +
+    (total < 10 ?
+      '<div class="callout bad"><b>Este es el muro.</b> Con ' + total + ' review' + (total === 1 ? "" : "s") +
+      ' en todo el catálogo, ni bajar el bid ni sumar keywords mueve la conversión: el tráfico llega y no confía. ' +
+      'Reviews es la palanca de mayor retorno y no cuesta por click.</div>' : "") +
+    '<div class="tscroll"><table class="tbl"><thead><tr>' +
+      '<th class="l">SKU</th><th class="l">Producto</th><th>Reviews</th><th>Unidades 90d</th><th class="l">Señal</th>' +
+    '</tr></thead><tbody>' +
+    list.map(r => '<tr>' +
+      '<td class="l cn">' + esc(r.SKU) + '</td>' +
+      '<td class="l">' + esc(r.Name) + '</td>' +
+      '<td class="' + (num(r.Reviews) === 0 ? 'roas-low' : '') + '">' + int(r.Reviews) + '</td>' +
+      '<td>' + int(r.Units_90d) + '</td>' +
+      '<td class="l">' + (has(r.Signal) ? '<span class="pill ' + (/star/i.test(r.Signal) ? 'p-on' : 'p-warn') + '">' + esc(r.Signal) + '</span>' : "—") + '</td>' +
+    '</tr>').join("") + '</tbody></table></div>';
+}
+
+function renderBlockers(rows){
+  const box = $("#blockersBox");
+  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">Sin blockers cargados.</div>'; return }
+  const rank = p => /alta|high|critic/i.test(p || "") ? 0 : /media|med/i.test(p || "") ? 1 : 2;
+  const sorted = rows.slice().sort((a,b) => rank(a.Priority) - rank(b.Priority));
+
+  box.className = "tscroll";
+  box.innerHTML = '<table class="tbl"><thead><tr>' +
+    '<th class="l">Item</th><th class="l">Tipo</th><th class="l">Detalle</th><th class="l">Owner</th><th class="l">Estado</th><th class="l">Prioridad</th>' +
+    '</tr></thead><tbody>' +
+    sorted.map(r => {
+      const done = /resuelto|done|cerrad|listo/i.test(r.Status || "");
+      const blocked = /bloque|block|pend/i.test(r.Status || "");
+      // Billing: estado si, cifra no. scrubMoney tapa montos si se colaron.
+      const detail = scrubMoney(r.Detail, String(r.Item) + " " + String(r.Type));
+      return '<tr>' +
+        '<td class="l cn">' + esc(r.Item) + '</td>' +
+        '<td class="l">' + esc(r.Type) + '</td>' +
+        '<td class="l note">' + esc(detail) + '</td>' +
+        '<td class="l">' + (esc(r.Owner) || "—") + '</td>' +
+        '<td class="l"><span class="pill ' + (done ? 'p-on' : blocked ? 'p-bad' : 'p-warn') + '">' + esc(r.Status || "—") + '</span></td>' +
+        '<td class="l"><span class="pill ' + (rank(r.Priority) === 0 ? 'p-bad' : rank(r.Priority) === 1 ? 'p-warn' : 'p-off') + '">' + esc(r.Priority || "—") + '</span></td>' +
+      '</tr>';
+    }).join("") + '</tbody></table>';
+}
+
+/* ============================================================
+   RENDER 05 - PPC
+   CLIENT-HIDE: todo este bloque expone metricas internas
+   (RoAS, CTR, ACoS, spend) y competidores en el campo Note.
+   ============================================================ */
+function renderPPC(rows){
+  const box = $("#ppcBox");
+  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">Sin datos en PPC_Campaigns.</div>'; return }
+
+  const spend  = rows.reduce((s,r) => s + num(r.Spend_Real), 0);
+  const sales  = rows.reduce((s,r) => s + num(r.Sales), 0);
+  const orders = rows.reduce((s,r) => s + num(r.Orders), 0);
+  const clicks = rows.reduce((s,r) => s + num(r.Clicks), 0);
+  const imps   = rows.reduce((s,r) => s + num(r.Impressions), 0);
+  const budget = rows.filter(r => /active|live|vivo|on/i.test(r.Status || ""))
+                     .reduce((s,r) => s + num(r.Budget_Day), 0);
+  const roas = spend > 0 ? sales/spend : 0;
+  const acos = sales > 0 ? (spend/sales)*100 : 0;
+  const ctr  = imps  > 0 ? (clicks/imps)*100 : 0;
+  const underBudget = budget > 0 && spend < budget * 0.5;
+
+  $("#ppcKpis").innerHTML =
+    '<div class="kpi ' + (roas < 1 ? 'bad' : 'good') + '"><div class="lbl">RoAS agregado</div><div class="val">' + roas.toFixed(2) + '</div><div class="foot">' + (roas < 1 ? "por debajo de 1 — pierde plata" : "por encima de 1") + '</div></div>' +
+    '<div class="kpi ' + (ctr < 0.5 ? 'warn' : '') + '"><div class="lbl">CTR agregado</div><div class="val">' + ctr.toFixed(2) + '%</div><div class="foot">' + int(clicks) + ' clicks / ' + int(imps) + ' imp.</div></div>' +
+    '<div class="kpi"><div class="lbl">ACoS</div><div class="val">' + (sales > 0 ? acos.toFixed(0) + "%" : "—") + '</div><div class="foot">' + int(orders) + ' órdenes atribuidas</div></div>' +
+    '<div class="kpi ' + (underBudget ? 'warn' : '') + '"><div class="lbl">Spend vs budget/día</div><div class="val">' + spend.toFixed(0) + '<span style="font-size:.9rem;color:var(--gris)">/' + budget.toFixed(0) + '</span></div><div class="foot">' + (underBudget ? "subejecución: no gasta el presupuesto" : "ejecución normal") + '</div></div>';
+
+  // Solo campanas ACTIVAS: una pausada con spend 0 no esta "subejecutando",
+  // esta apagada. Mismo criterio que el KPI de budget de arriba.
+  const under = rows.filter(r => /active|live|vivo|on/i.test(r.Status || "") &&
+                                 num(r.Budget_Day) > 0 &&
+                                 num(r.Spend_Real) < num(r.Budget_Day)*0.5).length;
+
+  box.className = "";
+  box.innerHTML =
+    (under ?
+      '<div class="callout"><b>Subejecución de presupuesto.</b> ' + under + ' campaña' + (under === 1 ? "" : "s") +
+      ' gasta' + (under === 1 ? "" : "n") + ' menos de la mitad del budget diario asignado. Cuando el spend real queda muy ' +
+      'por debajo del budget, el problema no es el presupuesto: es que no hay impresiones que comprar al bid actual, ' +
+      'o el listing no gana el click.</div>' : "") +
+    '<div class="tscroll"><table class="tbl"><thead><tr>' +
+      '<th class="l">Campaña</th><th class="l">Tipo</th><th class="l">Estado</th>' +
+      '<th>Budget/día</th><th>Spend real</th><th>Imp.</th><th>Clicks</th>' +
+      '<th>CTR</th><th>Órd.</th><th>Ventas</th><th>RoAS</th><th class="l">Nota</th>' +
+    '</tr></thead><tbody>' +
+    rows.map(r => {
+      const rv = num(r.RoAS);
+      const on = /active|live|vivo|on/i.test(r.Status || "");
+      const bd = num(r.Budget_Day), sp = num(r.Spend_Real);
+      const underRow = on && bd > 0 && sp < bd * 0.5; // el flag "sub" solo aplica a campanas vivas
+      const roasCell = has(r.RoAS)
+        ? '<span class="' + (rv < 1 ? 'roas-low' : 'roas-hi') + '">' + rv.toFixed(2) + '</span>'
+        : "—";
+      return '<tr>' +
+        '<td class="l cn">' + esc(r.Campaign) + (has(r.CampaignID) ? '<div class="num" style="font-size:.7rem;color:var(--gris);font-weight:400">' + esc(r.CampaignID) + '</div>' : "") + '</td>' +
+        '<td class="l">' + esc(r.Type) + '</td>' +
+        '<td class="l"><span class="pill ' + (on ? 'p-on' : 'p-off') + '">' + esc(r.Status || "—") + '</span></td>' +
+        '<td>' + money(r.Budget_Day) + '</td>' +
+        '<td>' + money(r.Spend_Real) + (underRow ? '<span class="flag">sub</span>' : '') + '</td>' +
+        '<td>' + int(r.Impressions) + '</td>' +
+        '<td>' + int(r.Clicks) + '</td>' +
+        '<td>' + (has(r.CTR) ? esc(r.CTR) : "—") + '</td>' +
+        '<td>' + int(r.Orders) + '</td>' +
+        '<td>' + money(r.Sales) + '</td>' +
+        '<td>' + roasCell + '</td>' +
+        '<td class="l note">' + (esc(scrubMoney(r.Note, "ppc note")) || "—") + '</td>' +
+      '</tr>';
+    }).join("") + '</tbody></table></div>' +
+    '<div class="callout info" style="margin-top:18px"><b>RoAS &lt; 1 marcado en rojo.</b> ' +
+    'En esta cuenta eso no dispara "pausar todo": PPC se sostiene por la señal de queries que devuelve. ' +
+    'La decisión de matarlo se toma contra el negocio (precio + orgánico), no contra el RoAS de la campaña aislada.</div>';
+}
+
+/* ============================================================
+   RENDER 06 - ACTIONS (kanban 4 columnas + filtro por semana)
+   ============================================================ */
+let ACTIONS = [];
+function renderActions(week){
+  const box = $("#actionsBox");
+  if(!ACTIONS.length){ box.className=""; box.innerHTML = '<div class="empty">Sin acciones cargadas.</div>'; return }
+  const rows = (!week || week === "__all") ? ACTIONS : ACTIONS.filter(r => String(r.Week).trim() === week);
+
+  const cols = [
+    {k:"done",  cls:"done",  t:"Hecho"},
+    {k:"todo",  cls:"todo",  t:"Por hacer"},
+    {k:"block", cls:"block", t:"Bloqueado"},
+    {k:"wait",  cls:"wait",  t:"Espera cliente"}
+  ];
+  const bucket = {done:[], todo:[], block:[], wait:[]};
+  rows.forEach(r => bucket[statusBucket(r.Status)].push(r));
+
+  $("#weekCount").textContent = rows.length + " acción" + (rows.length === 1 ? "" : "es");
+  box.className = "kanban";
+  box.innerHTML = cols.map(c =>
+    '<div class="col ' + c.cls + '">' +
+      '<h3>' + c.t + '<span class="cnt">' + bucket[c.k].length + '</span></h3>' +
+      (bucket[c.k].length ? bucket[c.k].map(r =>
+        '<div class="card">' +
+          '<div class="ca">' + esc(r.Title) + '</div>' +
+          (has(r.Detail) ? '<div class="cd">' + esc(scrubMoney(r.Detail, r.Title)) + '</div>' : "") +
+          (has(r.Date) ? '<div class="cf">' + esc(r.Date) + (has(r.Week) ? " · " + esc(r.Week) : "") + '</div>' : "") +
+        '</div>').join("") : '<div class="empty">—</div>') +
+    '</div>').join("");
+}
+
+/* ============================================================
+   ARRANQUE
+   ============================================================ */
+function setState(cls, txt){
+  $("#dot").className = "dot " + cls;
+  $("#dataState").textContent = txt;
+}
+
+function showSetup(){
+  setState("local", "Sin conectar · falta el Sheet");
+  const msg = '<div class="setup"><h4>Falta conectar la fuente de datos</h4>' +
+    'Este dashboard no trae datos propios: los lee en vivo de un Google Sheet.' +
+    '<ol>' +
+      '<li>Abrí el HTML y pegá el ID del Sheet en <code>SHEET_ID</code>.</li>' +
+      '<li>El Sheet tiene que estar en <b>"cualquiera con el link puede ver"</b>.</li>' +
+      '<li>Las pestañas deben llamarse exactamente: <code>Verdict</code> <code>SKU_Sales</code> ' +
+        '<code>Price_Cadence</code> <code>Blockers</code> <code>PPC_Campaigns</code> <code>Actions</code>.</li>' +
+      '<li>Alternativa: dejá <code>SHEET_ID</code> vacío y completá las 6 URLs de <code>CSV_URLS</code> ' +
+        'con "Publicar en la web → CSV".</li>' +
+    '</ol></div>';
+  ["#verdictBox","#skuBox","#priceBox","#reviewsBox","#blockersBox","#ppcBox","#actionsBox"]
+    .forEach(s => { const e = $(s); e.className = ""; e.innerHTML = (s === "#verdictBox") ? msg : '<div class="empty">—</div>' });
+}
+
+async function boot(){
+  $("#genDate").textContent = "Generado " + new Date().toLocaleString("es-AR",
+    {year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit"});
+
+  const configured = SHEET_ID || Object.keys(CSV_URLS).some(k => CSV_URLS[k] && CSV_URLS[k] !== "PASTE_CSV_URL_HERE");
+  if(!configured){ showSetup(); return }
+
+  setState("", "Cargando…");
+  const res = await Promise.allSettled(TABS.map(n => fetchSheet(n)));
+  const D = {};
+  TABS.forEach((n,i) => { D[n] = res[i].status === "fulfilled" ? res[i].value : null });
+
+  const failed = TABS.filter(n => D[n] === null);
+  if(failed.length === TABS.length){
+    setState("err", "Error de carga · revisá permisos del Sheet");
+  } else if(failed.length){
+    setState("live", "Live data · faltan: " + failed.join(", "));
+  } else {
+    setState("live", "Live data · Google Sheet");
+  }
+
+  renderVerdict(D.Verdict);
+  renderSKU(D.SKU_Sales);
+  renderPrice(D.Price_Cadence);
+  renderReviews(D.SKU_Sales);
+  renderBlockers(D.Blockers);
+  renderPPC(D.PPC_Campaigns);
+
+  ACTIONS = D.Actions || [];
+  const weeks = [];
+  ACTIONS.forEach(r => { const w = String(r.Week).trim(); if(w && weeks.indexOf(w) === -1) weeks.push(w) });
+  weeks.sort().reverse();
+  const sel = $("#weekSel");
+  weeks.forEach(w => { const o = document.createElement("option"); o.value = w; o.textContent = w; sel.appendChild(o) });
+  sel.onchange = () => renderActions(sel.value);
+  renderActions("__all");
+}
+
+boot();
+</script>
+</body>
+</html>
