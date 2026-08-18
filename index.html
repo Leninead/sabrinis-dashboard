@@ -82,6 +82,12 @@ h1 span{color:var(--marca)}
 .dot.err{background:var(--rojo); box-shadow:0 0 0 3px #b3352b22}
 .gen{font-size:.72rem; color:var(--gris); font-family:'IBM Plex Mono',monospace}
 
+/* -- Toggle de idioma -- */
+.langtog{display:inline-flex; align-items:center; border:1px solid var(--linea); background:var(--papel); border-radius:99px; overflow:hidden; font-family:inherit}
+.langtog button{appearance:none; border:0; background:transparent; font-family:inherit; font-size:.72rem; font-weight:700; letter-spacing:.06em; color:var(--gris); padding:5px 11px; cursor:pointer; transition:background .15s, color .15s}
+.langtog button:hover{color:var(--negro)}
+.langtog button[aria-pressed="true"]{background:var(--marca); color:#fff}
+
 /* -- Tabs -- */
 .tabs{display:flex; gap:2px; flex-wrap:wrap; margin:24px 0; border-bottom:1px solid var(--linea); position:sticky; top:0; background:var(--blanco); z-index:20; padding-top:6px}
 .tab{appearance:none; border:0; background:transparent; font-family:inherit; font-size:.92rem; font-weight:600; color:var(--gris); padding:11px 16px; cursor:pointer; border-bottom:2px solid transparent; transition:color .2s, border-color .2s; white-space:nowrap; display:flex; align-items:center; gap:7px}
@@ -215,87 +221,87 @@ footer b{color:var(--tinta)}
   <header>
     <div class="brandrow">
       <div>
-        <div class="kicker">LTH Marketplace Agency · Internal</div>
+        <div class="kicker" data-i18n="kicker"></div>
         <h1>Sabrini's <span>Royal Treats</span></h1>
-        <div class="sub">Walmart Canada · Internal Dashboard</div>
+        <div class="sub" data-i18n="subtitle"></div>
       </div>
       <div class="hmeta">
-        <span class="status"><span class="dot" id="dot"></span><span id="dataState">Conectando…</span></span>
+        <div class="langtog" role="group" aria-label="Language / Idioma">
+          <button type="button" id="langEN" aria-pressed="true">EN</button>
+          <button type="button" id="langES" aria-pressed="false">ES</button>
+        </div>
+        <span class="status"><span class="dot" id="dot"></span><span id="dataState"></span></span>
         <span class="gen" id="genDate"></span>
-        <span class="gen">Fuente: Walmart Reports + Orders Export</span>
+        <span class="gen" data-i18n="source"></span>
       </div>
     </div>
   </header>
 
   <nav class="tabs" id="tabs">
-    <button class="tab active" data-p="verdict"><span class="tn">01</span>Verdict</button>
-    <button class="tab" data-p="sku"><span class="tn">02</span>SKU Sales</button>
-    <button class="tab" data-p="price"><span class="tn">03</span>Price &amp; Organic</button>
-    <button class="tab" data-p="reviews"><span class="tn">04</span>Reviews &amp; Blockers</button>
-    <button class="tab" data-p="ppc"><span class="tn">05</span>PPC</button>
-    <button class="tab" data-p="actions"><span class="tn">06</span>Actions</button>
+    <button class="tab active" data-p="verdict"><span class="tn">01</span><span data-i18n="tabVerdict"></span></button>
+    <button class="tab" data-p="sku"><span class="tn">02</span><span data-i18n="tabSku"></span></button>
+    <button class="tab" data-p="price"><span class="tn">03</span><span data-i18n="tabPrice"></span></button>
+    <button class="tab" data-p="reviews"><span class="tn">04</span><span data-i18n="tabReviews"></span></button>
+    <button class="tab" data-p="ppc"><span class="tn">05</span><span data-i18n="tabPpc"></span></button>
+    <button class="tab" data-p="actions"><span class="tn">06</span><span data-i18n="tabActions"></span></button>
   </nav>
 
   <!-- 01 VERDICT -->
   <section class="panel active" data-p="verdict">
-    <div class="shead"><h2>Veredicto de la semana</h2>
-      <div class="snote">Lectura editorial. El motor del negocio es precio + orgánico; PPC es marginal.</div></div>
-    <div id="verdictBox" class="loading">Cargando veredicto…</div>
+    <div class="shead"><h2 data-i18n="verdictTitle"></h2>
+      <div class="snote" data-i18n="verdictNote"></div></div>
+    <div id="verdictBox" class="loading"></div>
   </section>
 
   <!-- 02 SKU SALES -->
   <section class="panel" data-p="sku">
-    <div class="shead"><h2>Ventas por SKU</h2>
-      <div class="snote">Ordenado por unidades 90d. La fila destacada es el SKU marcado <b>Star</b>.</div></div>
+    <div class="shead"><h2 data-i18n="skuTitle"></h2>
+      <div class="snote" data-i18n-html="skuNote"></div></div>
     <div id="skuKpis" class="kpis"></div>
-    <div id="skuBox" class="loading">Cargando SKUs…</div>
+    <div id="skuBox" class="loading"></div>
   </section>
 
   <!-- 03 PRICE & ORGANIC -->
   <section class="panel" data-p="price">
-    <div class="shead"><h2>Precio y cadencia orgánica</h2>
-      <div class="snote">Unidades por día. La línea punteada marca el drop de precio.</div></div>
+    <div class="shead"><h2 data-i18n="priceTitle"></h2>
+      <div class="snote" data-i18n="priceNote"></div></div>
     <div id="priceKpis" class="kpis"></div>
-    <div id="priceBox" class="loading">Cargando cadencia…</div>
+    <div id="priceBox" class="loading"></div>
   </section>
 
   <!-- 04 REVIEWS & BLOCKERS -->
   <section class="panel" data-p="reviews">
-    <div class="shead"><h2>Reviews y bloqueos</h2>
-      <div class="snote">Reviews es la palanca real: mueve conversión sin costo por click.</div></div>
-    <div id="reviewsBox" class="loading">Cargando reviews…</div>
-    <h3 class="sub3">Blockers abiertos</h3>
-    <div id="blockersBox" class="loading">Cargando blockers…</div>
+    <div class="shead"><h2 data-i18n="revTitle"></h2>
+      <div class="snote" data-i18n="revNote"></div></div>
+    <div id="reviewsBox" class="loading"></div>
+    <h3 class="sub3" data-i18n="blockersTitle"></h3>
+    <div id="blockersBox" class="loading"></div>
   </section>
 
   <!-- 05 PPC - secundario y honesto. CLIENT-HIDE: este tab entero -->
   <section class="panel" data-p="ppc">
     <div class="shead"><h2>PPC</h2>
-      <div class="snote">Secundario por diseño. Los números de abajo salen del Sheet.</div></div>
-    <div class="callout info">
-      <b>Contexto.</b> PPC no es el motor de esta cuenta. Se mantiene vivo por señal
-      (qué queries existen, qué categoría responde), no por retorno. La lectura correcta
-      de esta tabla es <b>direccional</b>, no de rentabilidad.
-    </div>
+      <div class="snote" data-i18n="ppcNote"></div></div>
+    <div class="callout info" data-i18n-html="ppcContext"></div>
     <div id="ppcKpis" class="kpis"></div>
-    <div id="ppcBox" class="loading">Cargando campañas…</div>
+    <div id="ppcBox" class="loading"></div>
   </section>
 
   <!-- 06 ACTIONS -->
   <section class="panel" data-p="actions">
-    <div class="shead"><h2>Acciones</h2>
-      <div class="snote">Kanban por estado, filtrable por semana.</div></div>
+    <div class="shead"><h2 data-i18n="actTitle"></h2>
+      <div class="snote" data-i18n="actNote"></div></div>
     <div class="kbar">
-      <label for="weekSel">Semana</label>
-      <select id="weekSel"><option value="__all">Todas</option></select>
+      <label for="weekSel" data-i18n="week"></label>
+      <select id="weekSel"><option value="__all"></option></select>
       <span class="gen" id="weekCount"></span>
     </div>
-    <div id="actionsBox" class="loading">Cargando acciones…</div>
+    <div id="actionsBox" class="loading"></div>
   </section>
 
   <footer>
-    <span>Sabrini's Royal Treats · Walmart Canada · <b>Dashboard interno LTH</b></span>
-    <span>Datos en vivo desde Google Sheet · recargá para actualizar</span>
+    <span data-i18n-html="footLeft"></span>
+    <span data-i18n="footRight"></span>
   </footer>
 </div>
 
@@ -392,6 +398,251 @@ function scrubMoney(text, context){
   return String(text).replace(/(US)?\$\s?[\d.,]+/gi, "[oculto]");
 }
 
+/* ============================================================
+   CAPA DE IDIOMA (UI FIJA SOLAMENTE)
+
+   Traduce unicamente strings de interfaz: tabs, headers de seccion,
+   labels de columna, botones, nombres de columna del kanban, notas
+   y pies de UI.
+
+   NO traduce -- y no debe hacerlo nunca:
+     - contenido del Google Sheet (Verdict, Blockers, Notes, Actions,
+       Status, Signal, Event, Price_Era): se muestra tal cual esta
+       cargado, en el idioma en que lo escribio quien lo cargo
+     - nombres de SKU y de producto
+     - nombres de campana
+     - keywords
+     - nombres de metrica (RoAS, CTR, ACoS): son terminos tecnicos
+       identicos en ambos idiomas; solo se traduce la palabra que los
+       rodea (p.ej. "Aggregate RoAS" / "RoAS agregado")
+
+   Este diccionario no contiene ningun dato del negocio: solo interfaz.
+   ============================================================ */
+const I18N = {
+  en: {
+    kicker:"LTH Marketplace Agency · Internal",
+    subtitle:"Walmart Canada · Internal Dashboard",
+    source:"Source: Walmart Reports + Orders Export",
+    genPrefix:"Generated",
+    locale:"en-CA",
+    tabVerdict:"Verdict", tabSku:"SKU Sales", tabPrice:"Price & Organic",
+    tabReviews:"Reviews & Blockers", tabPpc:"PPC", tabActions:"Actions",
+
+    verdictTitle:"Verdict of the week",
+    verdictNote:"Editorial read. The engine is price + organic; PPC is secondary.",
+    skuTitle:"Sales by SKU",
+    skuNote:"Sorted by 90d units. The highlighted row is the SKU flagged <b>Star</b>.",
+    priceTitle:"Price and organic cadence",
+    priceNote:"Units per day. The dashed line marks the price change.",
+    revTitle:"Reviews and blockers",
+    revNote:"Reviews is the real lever: it moves conversion with no cost per click.",
+    blockersTitle:"Open blockers",
+    ppcNote:"Secondary by design. The numbers below come from the Sheet.",
+    ppcContext:"<b>Context.</b> PPC is not the engine of this account. It stays alive for signal " +
+               "(which queries exist, which category responds), not for return. The correct read of " +
+               "this table is <b>directional</b>, not profitability.",
+    actTitle:"Actions",
+    actNote:"Kanban by status, filterable by week.",
+
+    loading:"Loading…", connecting:"Connecting…", loadingData:"Loading…",
+    liveData:"Live data · Google Sheet",
+    liveMissing:"Live data · missing: ",
+    loadError:"Load error · check Sheet permissions",
+    notConnected:"Not connected · Sheet missing",
+
+    emptyVerdict:"No verdict loaded in the Verdict tab.",
+    emptySku:"No data in SKU_Sales.",
+    emptyPrice:"No data in Price_Cadence.",
+    emptyPriceDates:"Price_Cadence has no valid dates.",
+    emptyReviews:"No review data (it comes from SKU_Sales).",
+    emptyBlockers:"No blockers loaded.",
+    emptyPpc:"No data in PPC_Campaigns.",
+    emptyActions:"No actions loaded.",
+
+    kUnits90:"90d units", kFootCatalog:"full catalog",
+    kStarSku:"Star SKU", kOfCatalog:" of catalog", kNoStar:"no Signal=Star",
+    kActiveSkus:"Active SKUs", kFootLive:"live listings",
+    kTotalReviews:"Total reviews", kWall:"the conversion wall", kAccrued:"accrued",
+
+    thSku:"SKU", thProduct:"Product", thSp:"Sp.", thItemId:"Item ID", thStatus:"Status",
+    thUnits90:"90d units", thBoom:"Boom", thPreBoom:"Pre-boom", thPctCat:"% cat.",
+    thPrice:"Price", thRev:"Rev.", thReviews:"Reviews", thSignal:"Signal",
+    thDate:"Date", thUnits:"Units", thPriceEra:"Price era", thEvent:"Event",
+    thItem:"Item", thType:"Type", thDetail:"Detail", thOwner:"Owner", thPriority:"Priority",
+    thCampaign:"Campaign", thBudgetDay:"Budget/day", thSpendReal:"Actual spend",
+    thImp:"Imp.", thClicks:"Clicks", thCtr:"CTR", thOrders:"Ord.", thSales:"Sales",
+    thRoas:"RoAS", thNote:"Note",
+
+    kUnitsWindow:"Units in window", kDays:" days",
+    kDaysWithSales:"Days with sales", kFootCadence:"organic cadence",
+    kAvgPre:"Avg/day pre-change", kAvgPost:"Avg/day post-change",
+    kVsPre:"% vs pre", kBeforeChange:"before the change",
+    eraOf: v => v + " era",
+    dropTo: v => "drop to " + v,
+    priceChange:"price change",
+    chartTitle:"Units sold per day",
+    chartSubSplit:"Light bars = previous price era · solid bars = after the change",
+    chartSubSingle:"Single series · daily units",
+    chartAria: (max, ev) => "Units sold per day. Peak of " + max + " units in a day." + ev,
+    chartAriaEv: (label, date) => " The " + label + " happens on " + date + ".",
+    viewTable:"View as table", hideTable:"Hide table",
+    units:"units",
+
+    kReviewsTotal:"Total reviews", kFootAllCatalog:"whole catalog",
+    kSkusNoRev:"SKUs with no reviews", kFootZeroProof:"social proof at zero",
+    wallCallout: n => "<b>This is the wall.</b> With " + n + " review" + (n === 1 ? "" : "s") +
+      " across the whole catalog, neither lowering the bid nor adding keywords moves conversion: " +
+      "traffic arrives and does not trust. Reviews is the highest-return lever and costs nothing per click.",
+
+    kRoasAgg:"Aggregate RoAS", kRoasUnder:"below 1 — losing money", kRoasOver:"above 1",
+    kCtrAgg:"Aggregate CTR", kCtrFoot: (c,i) => c + " clicks / " + i + " imp.",
+    kAcos:"ACoS", kAcosFoot: n => n + " attributed orders",
+    kSpendVsBudget:"Spend vs budget/day",
+    kUnderExec:"underspending: not using the budget", kNormalExec:"normal execution",
+    underCallout: n => "<b>Budget underspend.</b> " + n + " campaign" + (n === 1 ? "" : "s") +
+      " spend" + (n === 1 ? "s" : "") + " less than half of the assigned daily budget. When actual spend " +
+      "sits far below budget, the problem is not the budget: there are no impressions to buy at the current " +
+      "bid, or the listing is not winning the click.",
+    roasCallout:"<b>RoAS &lt; 1 flagged in red.</b> In this account that does not trigger \"pause everything\": " +
+      "PPC is kept for the query signal it returns. The decision to kill it is made against the business " +
+      "(price + organic), not against an isolated campaign's RoAS.",
+    subFlag:"sub",
+
+    week:"Week", allWeeks:"All",
+    actionCount: n => n + " action" + (n === 1 ? "" : "s"),
+    colDone:"Done", colTodo:"To do", colBlocked:"Blocked", colWaiting:"Waiting on client",
+
+    setupTitle:"Data source not connected",
+    setupIntro:"This dashboard carries no data of its own: it reads it live from a Google Sheet.",
+    setupL1:"Open the HTML and paste the Sheet ID into <code>SHEET_ID</code>.",
+    setupL2:"The Sheet must be set to <b>\"anyone with the link can view\"</b>.",
+    setupL3:"The tabs must be named exactly: <code>Verdict</code> <code>SKU_Sales</code> " +
+            "<code>Price_Cadence</code> <code>Blockers</code> <code>PPC_Campaigns</code> <code>Actions</code>.",
+    setupL4:"Alternative: leave <code>SHEET_ID</code> empty and fill the 6 <code>CSV_URLS</code> " +
+            "with \"Publish to the web → CSV\".",
+
+    footLeft:"Sabrini's Royal Treats · Walmart Canada · <b>LTH internal dashboard</b>",
+    footRight:"Live data from Google Sheet · reload to refresh"
+  },
+  es: {
+    kicker:"LTH Marketplace Agency · Interno",
+    subtitle:"Walmart Canada · Dashboard interno",
+    source:"Fuente: Walmart Reports + Orders Export",
+    genPrefix:"Generado",
+    locale:"es-AR",
+    tabVerdict:"Veredicto", tabSku:"Ventas por SKU", tabPrice:"Precio y orgánico",
+    tabReviews:"Reviews y bloqueos", tabPpc:"PPC", tabActions:"Acciones",
+
+    verdictTitle:"Veredicto de la semana",
+    verdictNote:"Lectura editorial. El motor es precio + orgánico; PPC es secundario.",
+    skuTitle:"Ventas por SKU",
+    skuNote:"Ordenado por unidades 90d. La fila destacada es el SKU marcado <b>Star</b>.",
+    priceTitle:"Precio y cadencia orgánica",
+    priceNote:"Unidades por día. La línea punteada marca el cambio de precio.",
+    revTitle:"Reviews y bloqueos",
+    revNote:"Reviews es la palanca real: mueve conversión sin costo por click.",
+    blockersTitle:"Blockers abiertos",
+    ppcNote:"Secundario por diseño. Los números de abajo salen del Sheet.",
+    ppcContext:"<b>Contexto.</b> PPC no es el motor de esta cuenta. Se mantiene vivo por señal " +
+               "(qué queries existen, qué categoría responde), no por retorno. La lectura correcta " +
+               "de esta tabla es <b>direccional</b>, no de rentabilidad.",
+    actTitle:"Acciones",
+    actNote:"Kanban por estado, filtrable por semana.",
+
+    loading:"Cargando…", connecting:"Conectando…", loadingData:"Cargando…",
+    liveData:"Datos en vivo · Google Sheet",
+    liveMissing:"Datos en vivo · faltan: ",
+    loadError:"Error de carga · revisá permisos del Sheet",
+    notConnected:"Sin conectar · falta el Sheet",
+
+    emptyVerdict:"Sin veredicto cargado en la pestaña Verdict.",
+    emptySku:"Sin datos en SKU_Sales.",
+    emptyPrice:"Sin datos en Price_Cadence.",
+    emptyPriceDates:"Price_Cadence sin fechas válidas.",
+    emptyReviews:"Sin datos de reviews (vienen de SKU_Sales).",
+    emptyBlockers:"Sin blockers cargados.",
+    emptyPpc:"Sin datos en PPC_Campaigns.",
+    emptyActions:"Sin acciones cargadas.",
+
+    kUnits90:"Unidades 90d", kFootCatalog:"catálogo completo",
+    kStarSku:"SKU estrella", kOfCatalog:" del catálogo", kNoStar:"sin Signal=Star",
+    kActiveSkus:"SKUs activos", kFootLive:"listings vivos",
+    kTotalReviews:"Reviews totales", kWall:"el muro de conversión", kAccrued:"acumuladas",
+
+    thSku:"SKU", thProduct:"Producto", thSp:"Sp.", thItemId:"Item ID", thStatus:"Estado",
+    thUnits90:"Un. 90d", thBoom:"Boom", thPreBoom:"Pre-boom", thPctCat:"% cat.",
+    thPrice:"Precio", thRev:"Rev.", thReviews:"Reviews", thSignal:"Señal",
+    thDate:"Fecha", thUnits:"Unidades", thPriceEra:"Era de precio", thEvent:"Evento",
+    thItem:"Item", thType:"Tipo", thDetail:"Detalle", thOwner:"Owner", thPriority:"Prioridad",
+    thCampaign:"Campaña", thBudgetDay:"Budget/día", thSpendReal:"Spend real",
+    thImp:"Imp.", thClicks:"Clicks", thCtr:"CTR", thOrders:"Órd.", thSales:"Ventas",
+    thRoas:"RoAS", thNote:"Nota",
+
+    kUnitsWindow:"Unidades en ventana", kDays:" días",
+    kDaysWithSales:"Días con venta", kFootCadence:"cadencia orgánica",
+    kAvgPre:"Prom. día pre-cambio", kAvgPost:"Prom. día post-cambio",
+    kVsPre:"% vs pre", kBeforeChange:"antes del cambio",
+    eraOf: v => "era " + v,
+    dropTo: v => "drop a " + v,
+    priceChange:"cambio de precio",
+    chartTitle:"Unidades vendidas por día",
+    chartSubSplit:"Barras claras = era de precio anterior · barras plenas = post-cambio",
+    chartSubSingle:"Serie única · unidades diarias",
+    chartAria: (max, ev) => "Unidades vendidas por día. Máximo " + max + " unidades en un día." + ev,
+    chartAriaEv: (label, date) => " El " + label + " ocurre el " + date + ".",
+    viewTable:"Ver como tabla", hideTable:"Ocultar tabla",
+    units:"unidades",
+
+    kReviewsTotal:"Reviews totales", kFootAllCatalog:"todo el catálogo",
+    kSkusNoRev:"SKUs sin reviews", kFootZeroProof:"social proof en cero",
+    wallCallout: n => "<b>Este es el muro.</b> Con " + n + " review" + (n === 1 ? "" : "s") +
+      " en todo el catálogo, ni bajar el bid ni sumar keywords mueve la conversión: el tráfico llega " +
+      "y no confía. Reviews es la palanca de mayor retorno y no cuesta por click.",
+
+    kRoasAgg:"RoAS agregado", kRoasUnder:"por debajo de 1 — pierde plata", kRoasOver:"por encima de 1",
+    kCtrAgg:"CTR agregado", kCtrFoot: (c,i) => c + " clicks / " + i + " imp.",
+    kAcos:"ACoS", kAcosFoot: n => n + " órdenes atribuidas",
+    kSpendVsBudget:"Spend vs budget/día",
+    kUnderExec:"subejecución: no gasta el presupuesto", kNormalExec:"ejecución normal",
+    underCallout: n => "<b>Subejecución de presupuesto.</b> " + n + " campaña" + (n === 1 ? "" : "s") +
+      " gasta" + (n === 1 ? "" : "n") + " menos de la mitad del budget diario asignado. Cuando el spend real " +
+      "queda muy por debajo del budget, el problema no es el presupuesto: es que no hay impresiones que " +
+      "comprar al bid actual, o el listing no gana el click.",
+    roasCallout:"<b>RoAS &lt; 1 marcado en rojo.</b> En esta cuenta eso no dispara \"pausar todo\": " +
+      "PPC se sostiene por la señal de queries que devuelve. La decisión de matarlo se toma contra el " +
+      "negocio (precio + orgánico), no contra el RoAS de la campaña aislada.",
+    subFlag:"sub",
+
+    week:"Semana", allWeeks:"Todas",
+    actionCount: n => n + (n === 1 ? " acción" : " acciones"), // plural sin tilde
+    colDone:"Hecho", colTodo:"Por hacer", colBlocked:"Bloqueado", colWaiting:"Espera cliente",
+
+    setupTitle:"Falta conectar la fuente de datos",
+    setupIntro:"Este dashboard no trae datos propios: los lee en vivo de un Google Sheet.",
+    setupL1:"Abrí el HTML y pegá el ID del Sheet en <code>SHEET_ID</code>.",
+    setupL2:"El Sheet tiene que estar en <b>\"cualquiera con el link puede ver\"</b>.",
+    setupL3:"Las pestañas deben llamarse exactamente: <code>Verdict</code> <code>SKU_Sales</code> " +
+            "<code>Price_Cadence</code> <code>Blockers</code> <code>PPC_Campaigns</code> <code>Actions</code>.",
+    setupL4:"Alternativa: dejá <code>SHEET_ID</code> vacío y completá las 6 URLs de <code>CSV_URLS</code> " +
+            "con \"Publicar en la web → CSV\".",
+
+    footLeft:"Sabrini's Royal Treats · Walmart Canada · <b>Dashboard interno LTH</b>",
+    footRight:"Datos en vivo desde Google Sheet · recargá para actualizar"
+  }
+};
+
+const LANG_KEY = "sabrinis_dash_lang";
+let LANG = "en"; // default EN
+try { const st = localStorage.getItem(LANG_KEY); if(st === "en" || st === "es") LANG = st } catch(e){ /* localStorage no disponible: se queda en EN */ }
+
+// t(clave) -> string; si la entrada es funcion, t la invoca con los args dados.
+function t(k){
+  const dict = I18N[LANG] || I18N.en;
+  const v = (k in dict) ? dict[k] : I18N.en[k];
+  if(typeof v === "function") return v.apply(null, Array.prototype.slice.call(arguments, 1));
+  return v == null ? "" : v;
+}
+
 const norm = s => String(s == null ? "" : s).toLowerCase().trim()
   .normalize("NFD").replace(/[̀-ͯ]/g,"");
 
@@ -440,7 +691,7 @@ const hideTip = () => { tip.style.opacity = 0 };
    ============================================================ */
 function renderVerdict(rows){
   const box = $("#verdictBox");
-  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">Sin veredicto cargado en la pestaña Verdict.</div>'; return }
+  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">' + esc(t("emptyVerdict")) + '</div>'; return }
   box.className = "vcards";
   box.innerHTML = rows.map(r => {
     const tc = toneClass(r.Tone);
@@ -457,7 +708,7 @@ function renderVerdict(rows){
    ============================================================ */
 function renderSKU(rows){
   const box = $("#skuBox");
-  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">Sin datos en SKU_Sales.</div>'; return }
+  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">' + esc(t("emptySku")) + '</div>'; return }
   const sorted = rows.slice().sort((a,b) => num(b.Units_90d) - num(a.Units_90d));
 
   const totalUnits = sorted.reduce((s,r) => s + num(r.Units_90d), 0);
@@ -466,16 +717,16 @@ function renderSKU(rows){
   const totalRev = sorted.reduce((s,r) => s + num(r.Reviews), 0);
 
   $("#skuKpis").innerHTML =
-    '<div class="kpi"><div class="lbl">Unidades 90d</div><div class="val">' + int(totalUnits) + '</div><div class="foot">catálogo completo</div></div>' +
-    '<div class="kpi ' + (star ? 'good' : '') + '"><div class="lbl">SKU estrella</div><div class="val" style="font-size:1.25rem">' + (star ? esc(star.SKU) : "—") + '</div><div class="foot">' + (star ? esc(star.Pct_Catalog || "") + " del catálogo" : "sin Signal=Star") + '</div></div>' +
-    '<div class="kpi"><div class="lbl">SKUs activos</div><div class="val">' + live + '<span style="font-size:.9rem;color:var(--gris)">/' + sorted.length + '</span></div><div class="foot">listings vivos</div></div>' +
-    '<div class="kpi ' + (totalRev < 10 ? 'bad' : '') + '"><div class="lbl">Reviews totales</div><div class="val">' + int(totalRev) + '</div><div class="foot">' + (totalRev < 10 ? "el muro de conversión" : "acumuladas") + '</div></div>';
+    '<div class="kpi"><div class="lbl">' + esc(t("kUnits90")) + '</div><div class="val">' + int(totalUnits) + '</div><div class="foot">' + esc(t("kFootCatalog")) + '</div></div>' +
+    '<div class="kpi ' + (star ? 'good' : '') + '"><div class="lbl">' + esc(t("kStarSku")) + '</div><div class="val" style="font-size:1.25rem">' + (star ? esc(star.SKU) : "—") + '</div><div class="foot">' + (star ? esc(star.Pct_Catalog || "") + esc(t("kOfCatalog")) : esc(t("kNoStar"))) + '</div></div>' +
+    '<div class="kpi"><div class="lbl">' + esc(t("kActiveSkus")) + '</div><div class="val">' + live + '<span style="font-size:.9rem;color:var(--gris)">/' + sorted.length + '</span></div><div class="foot">' + esc(t("kFootLive")) + '</div></div>' +
+    '<div class="kpi ' + (totalRev < 10 ? 'bad' : '') + '"><div class="lbl">' + esc(t("kTotalReviews")) + '</div><div class="val">' + int(totalRev) + '</div><div class="foot">' + (totalRev < 10 ? esc(t("kWall")) : esc(t("kAccrued"))) + '</div></div>';
 
   box.className = "tscroll";
   box.innerHTML = '<table class="tbl"><thead><tr>' +
-    '<th class="l">SKU</th><th class="l">Producto</th><th class="l">Sp.</th><th class="l">Item ID</th>' +
-    '<th class="l">Estado</th><th>Un. 90d</th><th>Boom</th><th>Pre-boom</th>' +
-    '<th>% cat.</th><th>Precio</th><th>Rev.</th></tr></thead><tbody>' +
+    '<th class="l">' + esc(t("thSku")) + '</th><th class="l">' + esc(t("thProduct")) + '</th><th class="l">' + esc(t("thSp")) + '</th><th class="l">' + esc(t("thItemId")) + '</th>' +
+    '<th class="l">' + esc(t("thStatus")) + '</th><th>' + esc(t("thUnits90")) + '</th><th>' + esc(t("thBoom")) + '</th><th>' + esc(t("thPreBoom")) + '</th>' +
+    '<th>' + esc(t("thPctCat")) + '</th><th>' + esc(t("thPrice")) + '</th><th>' + esc(t("thRev")) + '</th></tr></thead><tbody>' +
     sorted.map(r => {
       const isStar = /star/i.test(r.Signal || "");
       const on = /active|live|vivo/i.test(r.Status || "");
@@ -507,11 +758,11 @@ function renderSKU(rows){
    ============================================================ */
 function renderPrice(rows){
   const box = $("#priceBox");
-  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">Sin datos en Price_Cadence.</div>'; return }
+  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">' + esc(t("emptyPrice")) + '</div>'; return }
 
   const data = rows.filter(r => has(r.Date))
     .sort((a,b) => String(a.Date).localeCompare(String(b.Date)));
-  if(!data.length){ box.className=""; box.innerHTML = '<div class="empty">Price_Cadence sin fechas válidas.</div>'; return }
+  if(!data.length){ box.className=""; box.innerHTML = '<div class="empty">' + esc(t("emptyPriceDates")) + '</div>'; return }
 
   // Deteccion del cambio de precio, 100% data-driven: no hay ningun
   // precio hardcodeado aca. Criterio 1: la primera fila donde Price_Era
@@ -531,7 +782,7 @@ function renderPrice(rows){
   // El precio nuevo sale del Sheet, nunca del codigo.
   const newEra = dropIdx >= 0 ? String(data[dropIdx].Price_Era || "").trim() : "";
   const oldEra = dropIdx > 0  ? String(data[dropIdx-1].Price_Era || "").trim() : "";
-  const dropLabel = newEra ? ("drop a " + newEra) : "cambio de precio";
+  const dropLabel = newEra ? t("dropTo", newEra) : t("priceChange");
 
   const totalU = data.reduce((s,r) => s + num(r.Units_Day), 0);
   const days   = data.length;
@@ -546,11 +797,11 @@ function renderPrice(rows){
   }
 
   $("#priceKpis").innerHTML =
-    '<div class="kpi"><div class="lbl">Unidades en ventana</div><div class="val">' + int(totalU) + '</div><div class="foot">' + days + ' días</div></div>' +
-    '<div class="kpi"><div class="lbl">Días con venta</div><div class="val">' + active + '<span style="font-size:.9rem;color:var(--gris)">/' + days + '</span></div><div class="foot">cadencia orgánica</div></div>' +
+    '<div class="kpi"><div class="lbl">' + esc(t("kUnitsWindow")) + '</div><div class="val">' + int(totalU) + '</div><div class="foot">' + days + esc(t("kDays")) + '</div></div>' +
+    '<div class="kpi"><div class="lbl">' + esc(t("kDaysWithSales")) + '</div><div class="val">' + active + '<span style="font-size:.9rem;color:var(--gris)">/' + days + '</span></div><div class="foot">' + esc(t("kFootCadence")) + '</div></div>' +
     (preAvg !== null ?
-      '<div class="kpi"><div class="lbl">Prom. día pre-drop</div><div class="val">' + preAvg.toFixed(1) + '</div><div class="foot">' + (oldEra ? "era " + esc(oldEra) : "antes del cambio") + '</div></div>' +
-      '<div class="kpi ' + (lift !== null && lift > 0 ? 'good' : 'warn') + '"><div class="lbl">Prom. día post-drop</div><div class="val">' + postAvg.toFixed(1) + '</div><div class="foot">' + (lift !== null ? (lift >= 0 ? "+" : "") + lift.toFixed(0) + "% vs pre" : "—") + '</div></div>'
+      '<div class="kpi"><div class="lbl">' + esc(t("kAvgPre")) + '</div><div class="val">' + preAvg.toFixed(1) + '</div><div class="foot">' + (oldEra ? esc(t("eraOf", oldEra)) : esc(t("kBeforeChange"))) + '</div></div>' +
+      '<div class="kpi ' + (lift !== null && lift > 0 ? 'good' : 'warn') + '"><div class="lbl">' + esc(t("kAvgPost")) + '</div><div class="val">' + postAvg.toFixed(1) + '</div><div class="foot">' + (lift !== null ? (lift >= 0 ? "+" : "") + lift.toFixed(0) + esc(t("kVsPre")) : "—") + '</div></div>'
       : "");
 
   // -- Geometria del SVG --
@@ -592,7 +843,7 @@ function renderPrice(rows){
     }
     const ev  = has(r.Event) ? '<span class="te">' + esc(scrubMoney(r.Event, "event")) + '</span>' : "";
     const era = has(r.Price_Era) ? ' · ' + esc(r.Price_Era) : "";
-    const tipHTML = esc(r.Date) + era + '<br><b>' + v + '</b> unidades' + ev;
+    const tipHTML = esc(r.Date) + era + '<br><b>' + v + '</b> ' + esc(t("units")) + ev;
     hits += '<rect class="hit" x="' + (mL + i*step).toFixed(1) + '" y="' + mT + '" width="' + step.toFixed(1) +
             '" height="' + ih + '" data-i="' + i + '" data-t="' + tipHTML.replace(/"/g,'&quot;') + '"/>';
   });
@@ -611,17 +862,17 @@ function renderPrice(rows){
   box.innerHTML =
     '<div class="chartbox">' +
       '<div class="charthead"><div>' +
-        '<div class="charttitle">Unidades vendidas por día</div>' +
-        '<div class="chartsub">' + (dropIdx > 0 ? "Barras claras = era de precio anterior · barras plenas = post-drop" : "Serie única · unidades diarias") + '</div>' +
-      '</div><button class="toggle" id="tblToggle">Ver como tabla</button></div>' +
-      '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Unidades vendidas por día. Máximo ' + maxU + ' unidades en un día.' + (dropIdx >= 0 ? ' El ' + esc(dropLabel) + ' ocurre el ' + esc(data[dropIdx].Date) + '.' : '') + '">' +
+        '<div class="charttitle">' + esc(t("chartTitle")) + '</div>' +
+        '<div class="chartsub">' + esc(dropIdx > 0 ? t("chartSubSplit") : t("chartSubSingle")) + '</div>' +
+      '</div><button class="toggle" id="tblToggle">' + esc(t("viewTable")) + '</button></div>' +
+      '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(t("chartAria", maxU, (dropIdx >= 0 ? t("chartAriaEv", dropLabel, data[dropIdx].Date) : ""))) + '">' +
         grid + bars + evmark +
         '<line class="baseline" x1="' + mL + '" y1="' + (mT+ih) + '" x2="' + (W-mR) + '" y2="' + (mT+ih) + '"/>' +
         axis + xlabels + hits +
       '</svg>' +
     '</div>' +
     '<div id="priceTbl" style="display:none" class="tscroll">' +
-      '<table class="tbl"><thead><tr><th class="l">Fecha</th><th>Unidades</th><th class="l">Era de precio</th><th class="l">Evento</th></tr></thead><tbody>' +
+      '<table class="tbl"><thead><tr><th class="l">' + esc(t("thDate")) + '</th><th>' + esc(t("thUnits")) + '</th><th class="l">' + esc(t("thPriceEra")) + '</th><th class="l">' + esc(t("thEvent")) + '</th></tr></thead><tbody>' +
       data.map(r => '<tr><td class="l num">' + esc(r.Date) + '</td><td><b>' + int(r.Units_Day) + '</b></td>' +
         '<td class="l">' + (esc(r.Price_Era) || "—") + '</td>' +
         '<td class="l note">' + (esc(scrubMoney(r.Event, "event")) || "—") + '</td></tr>').join("") +
@@ -645,7 +896,7 @@ function renderPrice(rows){
   tg.onclick = () => {
     const show = pt.style.display === "none";
     pt.style.display = show ? "block" : "none";
-    tg.textContent = show ? "Ocultar tabla" : "Ver como tabla";
+    tg.textContent = show ? t("hideTable") : t("viewTable");
   };
 }
 
@@ -654,7 +905,7 @@ function renderPrice(rows){
    ============================================================ */
 function renderReviews(skuRows){
   const box = $("#reviewsBox");
-  if(!skuRows || !skuRows.length){ box.className=""; box.innerHTML = '<div class="empty">Sin datos de reviews (vienen de SKU_Sales).</div>'; return }
+  if(!skuRows || !skuRows.length){ box.className=""; box.innerHTML = '<div class="empty">' + esc(t("emptyReviews")) + '</div>'; return }
   const list = skuRows.slice().sort((a,b) => num(b.Reviews) - num(a.Reviews));
   const total = list.reduce((s,r) => s + num(r.Reviews), 0);
   const zero = list.filter(r => num(r.Reviews) === 0).length;
@@ -662,15 +913,12 @@ function renderReviews(skuRows){
   box.className = "";
   box.innerHTML =
     '<div class="kpis" style="margin-bottom:18px">' +
-      '<div class="kpi ' + (total < 10 ? 'bad' : 'good') + '"><div class="lbl">Reviews totales</div><div class="val">' + int(total) + '</div><div class="foot">todo el catálogo</div></div>' +
-      '<div class="kpi ' + (zero ? 'warn' : '') + '"><div class="lbl">SKUs sin reviews</div><div class="val">' + zero + '<span style="font-size:.9rem;color:var(--gris)">/' + list.length + '</span></div><div class="foot">social proof en cero</div></div>' +
+      '<div class="kpi ' + (total < 10 ? 'bad' : 'good') + '"><div class="lbl">' + esc(t("kReviewsTotal")) + '</div><div class="val">' + int(total) + '</div><div class="foot">' + esc(t("kFootAllCatalog")) + '</div></div>' +
+      '<div class="kpi ' + (zero ? 'warn' : '') + '"><div class="lbl">' + esc(t("kSkusNoRev")) + '</div><div class="val">' + zero + '<span style="font-size:.9rem;color:var(--gris)">/' + list.length + '</span></div><div class="foot">' + esc(t("kFootZeroProof")) + '</div></div>' +
     '</div>' +
-    (total < 10 ?
-      '<div class="callout bad"><b>Este es el muro.</b> Con ' + total + ' review' + (total === 1 ? "" : "s") +
-      ' en todo el catálogo, ni bajar el bid ni sumar keywords mueve la conversión: el tráfico llega y no confía. ' +
-      'Reviews es la palanca de mayor retorno y no cuesta por click.</div>' : "") +
+    (total < 10 ? '<div class="callout bad">' + t("wallCallout", total) + '</div>' : "") +
     '<div class="tscroll"><table class="tbl"><thead><tr>' +
-      '<th class="l">SKU</th><th class="l">Producto</th><th>Reviews</th><th>Unidades 90d</th><th class="l">Señal</th>' +
+      '<th class="l">' + esc(t("thSku")) + '</th><th class="l">' + esc(t("thProduct")) + '</th><th>' + esc(t("thReviews")) + '</th><th>' + esc(t("thUnits90")) + '</th><th class="l">' + esc(t("thSignal")) + '</th>' +
     '</tr></thead><tbody>' +
     list.map(r => '<tr>' +
       '<td class="l cn">' + esc(r.SKU) + '</td>' +
@@ -683,13 +931,13 @@ function renderReviews(skuRows){
 
 function renderBlockers(rows){
   const box = $("#blockersBox");
-  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">Sin blockers cargados.</div>'; return }
+  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">' + esc(t("emptyBlockers")) + '</div>'; return }
   const rank = p => /alta|high|critic/i.test(p || "") ? 0 : /media|med/i.test(p || "") ? 1 : 2;
   const sorted = rows.slice().sort((a,b) => rank(a.Priority) - rank(b.Priority));
 
   box.className = "tscroll";
   box.innerHTML = '<table class="tbl"><thead><tr>' +
-    '<th class="l">Item</th><th class="l">Tipo</th><th class="l">Detalle</th><th class="l">Owner</th><th class="l">Estado</th><th class="l">Prioridad</th>' +
+    '<th class="l">' + esc(t("thItem")) + '</th><th class="l">' + esc(t("thType")) + '</th><th class="l">' + esc(t("thDetail")) + '</th><th class="l">' + esc(t("thOwner")) + '</th><th class="l">' + esc(t("thStatus")) + '</th><th class="l">' + esc(t("thPriority")) + '</th>' +
     '</tr></thead><tbody>' +
     sorted.map(r => {
       const done = /resuelto|done|cerrad|listo/i.test(r.Status || "");
@@ -714,7 +962,7 @@ function renderBlockers(rows){
    ============================================================ */
 function renderPPC(rows){
   const box = $("#ppcBox");
-  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">Sin datos en PPC_Campaigns.</div>'; return }
+  if(!rows || !rows.length){ box.className=""; box.innerHTML = '<div class="empty">' + esc(t("emptyPpc")) + '</div>'; return }
 
   const spend  = rows.reduce((s,r) => s + num(r.Spend_Real), 0);
   const sales  = rows.reduce((s,r) => s + num(r.Sales), 0);
@@ -729,10 +977,10 @@ function renderPPC(rows){
   const underBudget = budget > 0 && spend < budget * 0.5;
 
   $("#ppcKpis").innerHTML =
-    '<div class="kpi ' + (roas < 1 ? 'bad' : 'good') + '"><div class="lbl">RoAS agregado</div><div class="val">' + roas.toFixed(2) + '</div><div class="foot">' + (roas < 1 ? "por debajo de 1 — pierde plata" : "por encima de 1") + '</div></div>' +
-    '<div class="kpi ' + (ctr < 0.5 ? 'warn' : '') + '"><div class="lbl">CTR agregado</div><div class="val">' + ctr.toFixed(2) + '%</div><div class="foot">' + int(clicks) + ' clicks / ' + int(imps) + ' imp.</div></div>' +
-    '<div class="kpi"><div class="lbl">ACoS</div><div class="val">' + (sales > 0 ? acos.toFixed(0) + "%" : "—") + '</div><div class="foot">' + int(orders) + ' órdenes atribuidas</div></div>' +
-    '<div class="kpi ' + (underBudget ? 'warn' : '') + '"><div class="lbl">Spend vs budget/día</div><div class="val">' + spend.toFixed(0) + '<span style="font-size:.9rem;color:var(--gris)">/' + budget.toFixed(0) + '</span></div><div class="foot">' + (underBudget ? "subejecución: no gasta el presupuesto" : "ejecución normal") + '</div></div>';
+    '<div class="kpi ' + (roas < 1 ? 'bad' : 'good') + '"><div class="lbl">' + esc(t("kRoasAgg")) + '</div><div class="val">' + roas.toFixed(2) + '</div><div class="foot">' + esc(roas < 1 ? t("kRoasUnder") : t("kRoasOver")) + '</div></div>' +
+    '<div class="kpi ' + (ctr < 0.5 ? 'warn' : '') + '"><div class="lbl">' + esc(t("kCtrAgg")) + '</div><div class="val">' + ctr.toFixed(2) + '%</div><div class="foot">' + esc(t("kCtrFoot", int(clicks), int(imps))) + '</div></div>' +
+    '<div class="kpi"><div class="lbl">' + esc(t("kAcos")) + '</div><div class="val">' + (sales > 0 ? acos.toFixed(0) + "%" : "—") + '</div><div class="foot">' + esc(t("kAcosFoot", int(orders))) + '</div></div>' +
+    '<div class="kpi ' + (underBudget ? 'warn' : '') + '"><div class="lbl">' + esc(t("kSpendVsBudget")) + '</div><div class="val">' + spend.toFixed(0) + '<span style="font-size:.9rem;color:var(--gris)">/' + budget.toFixed(0) + '</span></div><div class="foot">' + esc(underBudget ? t("kUnderExec") : t("kNormalExec")) + '</div></div>';
 
   // Solo campanas ACTIVAS: una pausada con spend 0 no esta "subejecutando",
   // esta apagada. Mismo criterio que el KPI de budget de arriba.
@@ -742,15 +990,11 @@ function renderPPC(rows){
 
   box.className = "";
   box.innerHTML =
-    (under ?
-      '<div class="callout"><b>Subejecución de presupuesto.</b> ' + under + ' campaña' + (under === 1 ? "" : "s") +
-      ' gasta' + (under === 1 ? "" : "n") + ' menos de la mitad del budget diario asignado. Cuando el spend real queda muy ' +
-      'por debajo del budget, el problema no es el presupuesto: es que no hay impresiones que comprar al bid actual, ' +
-      'o el listing no gana el click.</div>' : "") +
+    (under ? '<div class="callout">' + t("underCallout", under) + '</div>' : "") +
     '<div class="tscroll"><table class="tbl"><thead><tr>' +
-      '<th class="l">Campaña</th><th class="l">Tipo</th><th class="l">Estado</th>' +
-      '<th>Budget/día</th><th>Spend real</th><th>Imp.</th><th>Clicks</th>' +
-      '<th>CTR</th><th>Órd.</th><th>Ventas</th><th>RoAS</th><th class="l">Nota</th>' +
+      '<th class="l">' + esc(t("thCampaign")) + '</th><th class="l">' + esc(t("thType")) + '</th><th class="l">' + esc(t("thStatus")) + '</th>' +
+      '<th>' + esc(t("thBudgetDay")) + '</th><th>' + esc(t("thSpendReal")) + '</th><th>' + esc(t("thImp")) + '</th><th>' + esc(t("thClicks")) + '</th>' +
+      '<th>' + esc(t("thCtr")) + '</th><th>' + esc(t("thOrders")) + '</th><th>' + esc(t("thSales")) + '</th><th>' + esc(t("thRoas")) + '</th><th class="l">' + esc(t("thNote")) + '</th>' +
     '</tr></thead><tbody>' +
     rows.map(r => {
       const rv = num(r.RoAS);
@@ -765,7 +1009,7 @@ function renderPPC(rows){
         '<td class="l">' + esc(r.Type) + '</td>' +
         '<td class="l"><span class="pill ' + (on ? 'p-on' : 'p-off') + '">' + esc(r.Status || "—") + '</span></td>' +
         '<td>' + money(r.Budget_Day) + '</td>' +
-        '<td>' + money(r.Spend_Real) + (underRow ? '<span class="flag">sub</span>' : '') + '</td>' +
+        '<td>' + money(r.Spend_Real) + (underRow ? '<span class="flag">' + esc(t("subFlag")) + '</span>' : '') + '</td>' +
         '<td>' + int(r.Impressions) + '</td>' +
         '<td>' + int(r.Clicks) + '</td>' +
         '<td>' + (has(r.CTR) ? esc(r.CTR) : "—") + '</td>' +
@@ -775,9 +1019,7 @@ function renderPPC(rows){
         '<td class="l note">' + (esc(scrubMoney(r.Note, "ppc note")) || "—") + '</td>' +
       '</tr>';
     }).join("") + '</tbody></table></div>' +
-    '<div class="callout info" style="margin-top:18px"><b>RoAS &lt; 1 marcado en rojo.</b> ' +
-    'En esta cuenta eso no dispara "pausar todo": PPC se sostiene por la señal de queries que devuelve. ' +
-    'La decisión de matarlo se toma contra el negocio (precio + orgánico), no contra el RoAS de la campaña aislada.</div>';
+    '<div class="callout info" style="margin-top:18px">' + t("roasCallout") + '</div>';
 }
 
 /* ============================================================
@@ -786,23 +1028,25 @@ function renderPPC(rows){
 let ACTIONS = [];
 function renderActions(week){
   const box = $("#actionsBox");
-  if(!ACTIONS.length){ box.className=""; box.innerHTML = '<div class="empty">Sin acciones cargadas.</div>'; return }
+  if(!ACTIONS.length){ box.className=""; box.innerHTML = '<div class="empty">' + esc(t("emptyActions")) + '</div>'; return }
   const rows = (!week || week === "__all") ? ACTIONS : ACTIONS.filter(r => String(r.Week).trim() === week);
 
+  // Los nombres de columna son UI fija y se traducen. El Status que
+  // viene del Sheet NO se traduce: statusBucket() solo lo clasifica.
   const cols = [
-    {k:"done",  cls:"done",  t:"Hecho"},
-    {k:"todo",  cls:"todo",  t:"Por hacer"},
-    {k:"block", cls:"block", t:"Bloqueado"},
-    {k:"wait",  cls:"wait",  t:"Espera cliente"}
+    {k:"done",  cls:"done",  t:t("colDone")},
+    {k:"todo",  cls:"todo",  t:t("colTodo")},
+    {k:"block", cls:"block", t:t("colBlocked")},
+    {k:"wait",  cls:"wait",  t:t("colWaiting")}
   ];
   const bucket = {done:[], todo:[], block:[], wait:[]};
   rows.forEach(r => bucket[statusBucket(r.Status)].push(r));
 
-  $("#weekCount").textContent = rows.length + " acción" + (rows.length === 1 ? "" : "es");
+  $("#weekCount").textContent = t("actionCount", rows.length);
   box.className = "kanban";
   box.innerHTML = cols.map(c =>
     '<div class="col ' + c.cls + '">' +
-      '<h3>' + c.t + '<span class="cnt">' + bucket[c.k].length + '</span></h3>' +
+      '<h3>' + esc(c.t) + '<span class="cnt">' + bucket[c.k].length + '</span></h3>' +
       (bucket[c.k].length ? bucket[c.k].map(r =>
         '<div class="card">' +
           '<div class="ca">' + esc(r.Title) + '</div>' +
@@ -821,49 +1065,94 @@ function setState(cls, txt){
 }
 
 function showSetup(){
-  setState("local", "Sin conectar · falta el Sheet");
-  const msg = '<div class="setup"><h4>Falta conectar la fuente de datos</h4>' +
-    'Este dashboard no trae datos propios: los lee en vivo de un Google Sheet.' +
+  setState("local", t("notConnected"));
+  const msg = '<div class="setup"><h4>' + esc(t("setupTitle")) + '</h4>' +
+    esc(t("setupIntro")) +
     '<ol>' +
-      '<li>Abrí el HTML y pegá el ID del Sheet en <code>SHEET_ID</code>.</li>' +
-      '<li>El Sheet tiene que estar en <b>"cualquiera con el link puede ver"</b>.</li>' +
-      '<li>Las pestañas deben llamarse exactamente: <code>Verdict</code> <code>SKU_Sales</code> ' +
-        '<code>Price_Cadence</code> <code>Blockers</code> <code>PPC_Campaigns</code> <code>Actions</code>.</li>' +
-      '<li>Alternativa: dejá <code>SHEET_ID</code> vacío y completá las 6 URLs de <code>CSV_URLS</code> ' +
-        'con "Publicar en la web → CSV".</li>' +
+      '<li>' + t("setupL1") + '</li>' +
+      '<li>' + t("setupL2") + '</li>' +
+      '<li>' + t("setupL3") + '</li>' +
+      '<li>' + t("setupL4") + '</li>' +
     '</ol></div>';
   ["#verdictBox","#skuBox","#priceBox","#reviewsBox","#blockersBox","#ppcBox","#actionsBox"]
     .forEach(s => { const e = $(s); e.className = ""; e.innerHTML = (s === "#verdictBox") ? msg : '<div class="empty">—</div>' });
 }
 
-async function boot(){
-  $("#genDate").textContent = "Generado " + new Date().toLocaleString("es-AR",
+/* Aplica los strings estaticos del HTML marcados con data-i18n. */
+function applyStatic(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n) });
+  document.querySelectorAll("[data-i18n-html]").forEach(el => { el.innerHTML = t(el.dataset.i18nHtml) });
+  const allOpt = document.querySelector('#weekSel option[value="__all"]');
+  if(allOpt) allOpt.textContent = t("allWeeks");
+  $("#langEN").setAttribute("aria-pressed", LANG === "en" ? "true" : "false");
+  $("#langES").setAttribute("aria-pressed", LANG === "es" ? "true" : "false");
+  if(GEN_AT) $("#genDate").textContent = t("genPrefix") + " " + GEN_AT.toLocaleString(t("locale"),
     {year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit"});
+}
+
+/* Estado de datos: se guarda la clave, no el texto ya traducido, para
+   poder re-renderizarlo en el otro idioma sin volver a pedir nada. */
+let STATE = {cls:"", key:"connecting", arg:""};
+function setStateKey(cls, key, arg){ STATE = {cls:cls, key:key, arg:arg || ""}; paintState() }
+function paintState(){
+  $("#dot").className = "dot " + STATE.cls;
+  $("#dataState").textContent = t(STATE.key) + (STATE.arg || "");
+}
+
+/* Los datos del Sheet se guardan para re-renderizar al cambiar de
+   idioma SIN volver a pedirlos: el contenido es identico, solo cambia
+   la UI que lo envuelve. */
+let DATA = null;
+let GEN_AT = null;
+
+function renderAll(){
+  if(!DATA){ showSetup(); return }
+  renderVerdict(DATA.Verdict);
+  renderSKU(DATA.SKU_Sales);
+  renderPrice(DATA.Price_Cadence);
+  renderReviews(DATA.SKU_Sales);
+  renderBlockers(DATA.Blockers);
+  renderPPC(DATA.PPC_Campaigns);
+  const sel = $("#weekSel");
+  renderActions(sel ? sel.value : "__all");
+}
+
+function setLang(l){
+  if(l !== "en" && l !== "es") return;
+  LANG = l;
+  try { localStorage.setItem(LANG_KEY, l) } catch(e){ /* sin localStorage: no persiste, no rompe */ }
+  applyStatic();
+  paintState();
+  renderAll();
+}
+
+$("#langEN").onclick = () => setLang("en");
+$("#langES").onclick = () => setLang("es");
+
+async function boot(){
+  GEN_AT = new Date();
+  applyStatic();
+  paintState();
 
   const configured = SHEET_ID || Object.keys(CSV_URLS).some(k => CSV_URLS[k] && CSV_URLS[k] !== "PASTE_CSV_URL_HERE");
   if(!configured){ showSetup(); return }
 
-  setState("", "Cargando…");
+  setStateKey("", "loadingData");
   const res = await Promise.allSettled(TABS.map(n => fetchSheet(n)));
   const D = {};
   TABS.forEach((n,i) => { D[n] = res[i].status === "fulfilled" ? res[i].value : null });
 
   const failed = TABS.filter(n => D[n] === null);
   if(failed.length === TABS.length){
-    setState("err", "Error de carga · revisá permisos del Sheet");
+    setStateKey("err", "loadError");
   } else if(failed.length){
-    setState("live", "Live data · faltan: " + failed.join(", "));
+    setStateKey("live", "liveMissing", failed.join(", "));
   } else {
-    setState("live", "Live data · Google Sheet");
+    setStateKey("live", "liveData");
   }
 
-  renderVerdict(D.Verdict);
-  renderSKU(D.SKU_Sales);
-  renderPrice(D.Price_Cadence);
-  renderReviews(D.SKU_Sales);
-  renderBlockers(D.Blockers);
-  renderPPC(D.PPC_Campaigns);
-
+  DATA = D;
   ACTIONS = D.Actions || [];
   const weeks = [];
   ACTIONS.forEach(r => { const w = String(r.Week).trim(); if(w && weeks.indexOf(w) === -1) weeks.push(w) });
@@ -871,7 +1160,8 @@ async function boot(){
   const sel = $("#weekSel");
   weeks.forEach(w => { const o = document.createElement("option"); o.value = w; o.textContent = w; sel.appendChild(o) });
   sel.onchange = () => renderActions(sel.value);
-  renderActions("__all");
+
+  renderAll();
 }
 
 boot();
